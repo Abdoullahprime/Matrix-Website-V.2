@@ -1,0 +1,95 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  
+  --color-matrix-navy: #114568;
+  --color-matrix-blue-primary: #43789c;
+  --color-matrix-blue-dark: #27506b;
+  --color-matrix-blue-light: #7e9bb9;
+  --color-matrix-silver: #b8b8c1;
+  --color-matrix-paper: #F8FAFC;
+  
+  --radius-3xl: 1.5rem;
+  --radius-4xl: 2rem;
+}
+
+@layer base {
+  body {
+    @apply font-sans text-matrix-navy bg-white antialiased;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-sans font-bold tracking-tight;
+  }
+}
+
+.glass-nav {
+  @apply bg-white border-b border-slate-100 sticky top-0 z-50;
+}
+
+.bg-matrix-gradient {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+}
+
+.bg-matrix-dark-gradient {
+  background: linear-gradient(135deg, var(--color-matrix-navy) 0%, var(--color-matrix-blue-dark) 100%);
+}
+
+.btn-primary {
+  @apply bg-matrix-blue-primary text-white px-8 py-4 rounded-md font-bold transition-all hover:bg-matrix-blue-dark active:scale-95 disabled:opacity-50 inline-flex items-center justify-center;
+}
+
+.btn-secondary {
+  @apply border-2 border-matrix-blue-primary text-matrix-blue-primary px-8 py-4 rounded-md font-bold transition-all hover:bg-matrix-blue-primary hover:text-white active:scale-95 inline-flex items-center justify-center;
+}
+
+.btn-link {
+  @apply text-matrix-blue-primary font-bold hover:underline inline-flex items-center gap-2;
+}
+
+.card-hover {
+  @apply transition-all duration-300 hover:shadow-2xl hover:shadow-matrix-blue-light/10 border border-slate-100 rounded-xl bg-white p-8;
+}
+
+.section-padding {
+  @apply py-24 md:py-32;
+}
+
+.bezel-bottom {
+  position: relative;
+}
+
+.bezel-bottom::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: -10%;
+  right: -10%;
+  height: 150px;
+  background: white;
+  border-radius: 100% 100% 0 0;
+  z-index: 10;
+}
+
+.sf-card {
+  @apply relative overflow-hidden rounded-2xl p-8 transition-all duration-300 hover:-translate-y-2;
+}
+
+.sf-card-badge {
+  @apply absolute -bottom-4 -right-4 w-24 h-24 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  animation: marquee 120s linear infinite;
+}
+
+.container-custom {
+  @apply max-w-7xl mx-auto px-6;
+}
