@@ -1,40 +1,60 @@
 import 'dotenv/config';
 import express from 'express';
-import Database from 'better-sqlite3';
+import mysql from 'mysql2/promise';
 import path from 'path';
 import fs from 'fs';
 
 const PORT = Number(process.env.PORT || 3001);
 
 // --- Database -------------------------------------------------------------
+// MySQL rather than a file-based store: Plesk Windows hosting does not grant
+// write access to the site directory, and mysql2 is pure JS so there is no
+// native module to compile on the server.
 
-const dataDir = path.resolve(process.cwd(), 'data');
-fs.mkdirSync(dataDir, { recursive: true });
+const pool = mysql.createPool({
+  host: process.env.DB_HOST || 'localhost',
+  port: Number(process.env.DB_PORT || 3306),
+  user: process.env.DB_USER || '',
+  password: process.env.DB_PASSWORD || '',
+  database: process.env.DB_NAME || '',
+  waitForConnections: true,
+  connectionLimit: 5,
+});
 
-const db = new Database(path.join(dataDir, 'contacts.db'));
-db.pragma('journal_mode = WAL');
-db.exec(`
+const CREATE_TABLE = `
   CREATE TABLE IF NOT EXISTS contact_submissions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    full_name TEXT NOT NULL,
-    email TEXT NOT NULL,
-    organization TEXT NOT NULL,
-    interest TEXT NOT NULL,
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    full_name VARCHAR(120) NOT NULL,
+    email VARCHAR(200) NOT NULL,
+    organization VARCHAR(200) NOT NULL,
+    interest VARCHAR(200) NOT NULL,
     message TEXT NOT NULL,
-    ip TEXT,
-    created_at TEXT NOT NULL DEFAULT (datetime('now'))
-  )
-`);
+    ip VARCHAR(45) NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_created_at (created_at)
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+`;
 
-const insertSubmission = db.prepare(`
-  INSERT INTO contact_submissions (full_name, email, organization, interest, message, ip)
-  VALUES (@fullName, @email, @organization, @interest, @message, @ip)
-`);
+let dbReady = false;
+
+async function initDb() {
+  try {
+    await pool.query(CREATE_TABLE);
+    dbReady = true;
+    console.log('Database ready (contact_submissions).');
+  } catch (err) {
+    // Keep serving the site: only the contact endpoint depends on the database.
+    dbReady = false;
+    console.error('Database init failed. The site will still serve; /api/contact will return 503.');
+    console.error(err instanceof Error ? err.message : err);
+  }
+}
 
 // --- App ------------------------------------------------------------------
 
 const app = express();
 app.disable('x-powered-by');
+app.set('trust proxy', true);
 app.use(express.json({ limit: '32kb' }));
 
 // Simple fixed-window rate limit per IP: 5 submissions per hour
@@ -64,10 +84,10 @@ function cleanField(value: unknown, maxLen: number): string | null {
 }
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok: true });
+  res.json({ ok: true, database: dbReady ? 'connected' : 'unavailable' });
 });
 
-app.post('/api/contact', (req, res) => {
+app.post('/api/contact', async (req, res) => {
   const ip = req.ip || 'unknown';
 
   // Honeypot: bots fill the hidden "website" field. Pretend success, store nothing.
@@ -92,21 +112,50 @@ app.post('/api/contact', (req, res) => {
     return res.status(400).json({ error: 'Please provide a valid email address.' });
   }
 
-  insertSubmission.run({ fullName, email, organization, interest, message, ip });
-  res.json({ ok: true });
+  try {
+    // Parameterised query: values are never interpolated into the SQL.
+    await pool.execute(
+      `INSERT INTO contact_submissions
+         (full_name, email, organization, interest, message, ip)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [fullName, email, organization, interest, message, ip.slice(0, 45)]
+    );
+    dbReady = true;
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Contact insert failed:', err instanceof Error ? err.message : err);
+    res.status(503).json({
+      error: 'We could not save your message right now. Please email info@matrixgambia.com.',
+    });
+  }
 });
 
-// --- Static frontend (production) ----------------------------------------
+// --- Static frontend ------------------------------------------------------
 
-const distDir = path.resolve(process.cwd(), 'dist');
+const distDir = fs.existsSync(path.resolve(process.cwd(), 'dist'))
+  ? path.resolve(process.cwd(), 'dist')
+  : path.resolve(__dirname, 'dist');
+
 if (fs.existsSync(distDir)) {
-  app.use(express.static(distDir));
+  app.use(
+    express.static(distDir, {
+      setHeaders: (res, filePath) => {
+        // Hashed asset filenames can be cached hard; index.html must not be.
+        if (filePath.includes(`${path.sep}assets${path.sep}`)) {
+          res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        }
+      },
+    })
+  );
   // SPA fallback: let React Router handle all non-API routes
   app.get(/^(?!\/api\/).*/, (_req, res) => {
     res.sendFile(path.join(distDir, 'index.html'));
   });
+} else {
+  console.warn(`No frontend build found at ${distDir}. Serving API only.`);
 }
 
 app.listen(PORT, () => {
-  console.log(`Matrix Solutions API listening on http://localhost:${PORT}`);
+  console.log(`Matrix Solutions site listening on port ${PORT}`);
+  void initDb();
 });

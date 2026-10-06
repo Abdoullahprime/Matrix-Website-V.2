@@ -7,3 +7,6 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# Compiled deployment bundle (regenerate with: npm run build:deploy)
+deploy/app/
