@@ -10,3 +10,4 @@ coverage/
 
 # Compiled deployment bundle (regenerate with: npm run build:deploy)
 deploy/app/
+deploy/matrix-site-upload.zip
