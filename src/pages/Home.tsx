@@ -6,6 +6,10 @@ import Hero from '../components/Hero';
 import LogoWall from '../components/LogoWall';
 import SolutionsGrid from '../components/SolutionsGrid';
 import CaseStudies from '../components/CaseStudies';
+import ProcessStrip from '../components/ProcessStrip';
+import IndustryChips from '../components/IndustryChips';
+import FaqSection from '../components/FaqSection';
+import SectionLabel from '../components/SectionLabel';
 import usePageMeta from '../hooks/usePageMeta';
 
 const stats = [
@@ -58,12 +62,13 @@ export default function Home() {
         </div>
       </section>
 
-      <SolutionsGrid />
+      <SolutionsGrid label="What we do" labelNumber="01" />
 
       {/* Expertise Section */}
       <section className="section-padding bg-white">
         <div className="container-custom">
           <div className="text-center max-w-3xl mx-auto mb-20">
+            <SectionLabel number="02" className="mb-4">Our expertise</SectionLabel>
             <h2 className="text-4xl md:text-5xl font-extrabold text-matrix-navy mb-6">Expertise is built in.</h2>
             <p className="text-matrix-slate text-xl font-medium">
               Our ecosystem of experts, partners, and community members ensures your success at every stage.
@@ -81,7 +86,10 @@ export default function Home() {
         </div>
       </section>
 
+      <ProcessStrip />
+      <IndustryChips />
       <CaseStudies />
+      <FaqSection />
 
       {/* CTA Section */}
       <section className="section-padding bg-matrix-navy text-white text-center">

@@ -81,24 +81,30 @@ export default function ProductCatalog() {
   const [selectedProduct, setSelectedProduct] = useState<{name: string, desc: string} | null>(null);
 
   return (
-    <section className="relative bg-slate-50 pt-32 pb-48 overflow-hidden">
-      {/* Oval Bezel Effect */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[150%] aspect-[2/1] bg-white rounded-[100%] -translate-y-1/2 shadow-sm border-b border-slate-100" />
-      
-      <div className="container-custom relative z-10">
-        <div className="text-center max-w-3xl mx-auto mb-32">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-matrix-blue-primary/10 text-matrix-blue-primary text-[10px] font-black uppercase tracking-widest mb-6">
-            <Info size={14} />
-            Our Ecosystem
-          </div>
-          <h2 className="text-4xl md:text-6xl font-extrabold text-matrix-navy mb-8 tracking-tight">
-            One platform for <span className="text-matrix-blue-primary">all your needs</span>.
-          </h2>
-          <p className="text-matrix-slate text-xl font-medium leading-relaxed">
-            A wide variety of generic software solutions, catering to your needs, no matter the industry.
-          </p>
-        </div>
+    <section className="relative bg-slate-50 pb-48 overflow-hidden">
+      {/* Intro block. The white oval is sized to THIS block (twice its height, centred
+          on its top edge), so its lowest point always sits at the bottom of the intro
+          and the product categories below can never run into the curve. */}
+      <div className="relative pt-32 pb-28">
+        <div className="absolute left-1/2 -translate-x-1/2 top-[-100%] h-[200%] w-[150%] bg-white rounded-[100%] shadow-sm border-b border-slate-100" />
 
+        <div className="container-custom relative z-10">
+          <div className="text-center max-w-3xl mx-auto">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-matrix-blue-primary/10 text-matrix-blue-primary text-[10px] font-black uppercase tracking-widest mb-6">
+              <Info size={14} />
+              Our Ecosystem
+            </div>
+            <h2 className="text-4xl md:text-6xl font-extrabold text-matrix-navy mb-8 tracking-tight">
+              One platform for <span className="text-matrix-blue-primary">all your needs</span>.
+            </h2>
+            <p className="text-matrix-slate text-xl font-medium leading-relaxed">
+              A wide variety of generic software solutions, catering to your needs, no matter the industry.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="container-custom relative z-10 pt-20">
         <div className="space-y-32">
           {productCategories.map((category, catIdx) => (
             <div key={catIdx} className="space-y-16">

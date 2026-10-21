@@ -2,12 +2,15 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Landmark, Briefcase, ShieldCheck, Zap } from 'lucide-react';
+import SectionLabel from './SectionLabel';
 
 interface SolutionsGridProps {
   showCta?: boolean;
+  label?: string;
+  labelNumber?: string;
 }
 
-export default function SolutionsGrid({ showCta = true }: SolutionsGridProps) {
+export default function SolutionsGrid({ showCta = true, label, labelNumber }: SolutionsGridProps) {
   const solutions = [
     {
       title: "Banking & Finance",
@@ -39,6 +42,7 @@ export default function SolutionsGrid({ showCta = true }: SolutionsGridProps) {
     <section className="section-padding bg-white">
       <div className="container-custom">
         <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
+          {label && labelNumber && <SectionLabel number={labelNumber}>{label}</SectionLabel>}
           <h2 className="text-4xl md:text-5xl font-extrabold text-matrix-navy">
             Launch faster with Matrix solutions, built for your industry.
           </h2>
