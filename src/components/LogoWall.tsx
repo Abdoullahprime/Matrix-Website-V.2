@@ -53,9 +53,8 @@ export default function LogoWall() {
                 <img
                   src={src}
                   alt=""
-                  loading="lazy"
                   decoding="async"
-                  className="h-12 w-auto max-w-[88px] object-contain shrink-0"
+                  className="h-14 w-auto max-w-[104px] object-contain shrink-0"
                 />
               ) : (
                 <div className="w-10 h-10 bg-matrix-navy rounded-lg flex items-center justify-center text-white font-black text-xl group-hover/logo:bg-matrix-blue-primary transition-colors">
