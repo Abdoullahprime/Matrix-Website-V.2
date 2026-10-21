@@ -1,4 +1,5 @@
 import React from 'react';
+import { clientLogo } from '../data/clientLogos';
 
 const logos = [
   { name: "GRA - GAMBIA REVENUE AUTHORITY" },
@@ -41,19 +42,32 @@ export default function LogoWall() {
       
       <div className="relative flex overflow-hidden group">
         <div className="flex animate-marquee whitespace-nowrap gap-12 md:gap-24 py-4 items-center">
-          {allLogos.map((logo, index) => (
+          {allLogos.map((logo, index) => {
+            const src = clientLogo(logo.name);
+            return (
             <div
               key={index}
               className="flex items-center gap-4 grayscale opacity-40 hover:opacity-100 hover:grayscale-0 transition-all cursor-pointer group/logo shrink-0"
             >
-              <div className="w-10 h-10 bg-matrix-navy rounded-lg flex items-center justify-center text-white font-black text-xl group-hover/logo:bg-matrix-blue-primary transition-colors">
-                {logo.name.charAt(0)}
-              </div>
+              {src ? (
+                <img
+                  src={src}
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                  className="h-12 w-auto max-w-[88px] object-contain shrink-0"
+                />
+              ) : (
+                <div className="w-10 h-10 bg-matrix-navy rounded-lg flex items-center justify-center text-white font-black text-xl group-hover/logo:bg-matrix-blue-primary transition-colors">
+                  {logo.name.charAt(0)}
+                </div>
+              )}
               <span className="text-xs font-black text-matrix-navy text-left max-w-[120px] leading-tight uppercase tracking-tight whitespace-normal">
                 {logo.name}
               </span>
             </div>
-          ))}
+            );
+          })}
         </div>
         
         {/* Gradient overlays for smooth fade */}

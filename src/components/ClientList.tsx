@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { Search, ChevronRight, X } from 'lucide-react';
+import { clientLogo } from '../data/clientLogos';
 
 const clientData = [
   { client: "GRA - GAMBIA REVENUE AUTHORITY", product: "Human Resources Management System", date: "10 Nov 2025", type: "Standard" },
@@ -219,9 +220,21 @@ export default function ClientList() {
               }}
               className="aspect-square bg-slate-50 rounded-2xl flex flex-col items-center justify-center p-6 border border-slate-100 hover:border-matrix-blue-primary focus-visible:border-matrix-blue-primary hover:bg-white transition-all cursor-pointer shadow-sm hover:shadow-xl group outline-none focus-visible:ring-2 focus-visible:ring-matrix-blue-primary/30"
             >
-              <div className="w-16 h-16 bg-matrix-navy rounded-xl flex items-center justify-center text-white font-black text-3xl mb-4 group-hover:bg-matrix-blue-primary transition-colors">
-                {name.charAt(0)}
-              </div>
+              {clientLogo(name) ? (
+                <div className="w-full h-16 mb-4 flex items-center justify-center">
+                  <img
+                    src={clientLogo(name)}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    className="max-h-16 max-w-[80%] w-auto h-auto object-contain"
+                  />
+                </div>
+              ) : (
+                <div className="w-16 h-16 bg-matrix-navy rounded-xl flex items-center justify-center text-white font-black text-3xl mb-4 group-hover:bg-matrix-blue-primary transition-colors">
+                  {name.charAt(0)}
+                </div>
+              )}
               <div className="text-[10px] font-black text-matrix-navy uppercase tracking-widest text-center leading-tight line-clamp-2">
                 {name.split(' - ')[0]}
               </div>
