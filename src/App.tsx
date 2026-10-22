@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import Layout from './components/Layout';
 import ScrollToTop from './components/ScrollToTop';
+import ChatWidget from './components/ChatWidget';
 import Preloader from './components/Preloader';
 import Home from './pages/Home';
 import Solutions from './pages/Solutions';
@@ -63,6 +64,7 @@ export default function App() {
                 <Route path="*" element={<NotFound />} />
               </Route>
             </Routes>
+            <ChatWidget />
           </motion.div>
         )}
       </AnimatePresence>
