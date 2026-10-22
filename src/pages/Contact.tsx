@@ -42,7 +42,9 @@ export default function Contact() {
     setStatus('sending');
     setErrorMessage('');
     try {
-      const res = await fetch('/api/contact', {
+      // The ".php" is the real file on IIS hosting (iis/api/contact.php); the local
+      // development server (server/index.ts) answers the same URL.
+      const res = await fetch('/api/contact.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),

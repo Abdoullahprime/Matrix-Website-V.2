@@ -8,24 +8,16 @@ import fs from 'fs';
 const here = typeof __dirname !== 'undefined' ? __dirname : process.cwd();
 
 // --- Settings -------------------------------------------------------------
-// Plesk on Windows (iisnode) has no screen for environment variables, so settings are
-// read from a file. First match wins for each key, and real environment variables
-// always win. Looked up in order:
-//   1. the file named by MATRIX_ENV_FILE
-//   2. ../matrix.env  (the hosting account's home directory, ABOVE the web root, so it
-//                      can never be downloaded; recommended on Plesk)
-//   3. ./.env         (next to this file; convenient for local development)
+// This server is the DEVELOPMENT stand-in for the PHP API in iis/api (same URLs, same
+// rules). Settings come from a .env file; real environment variables always win.
 for (const file of [
   process.env.MATRIX_ENV_FILE,
-  path.resolve(here, '..', 'matrix.env'),
   path.resolve(here, '.env'),
   path.resolve(process.cwd(), '.env'),
 ]) {
   if (file && fs.existsSync(file)) dotenv.config({ path: file, quiet: true });
 }
 
-// Behind iisnode, PORT is a named pipe (for example \\.\pipe\abc123), not a number, so
-// it must be passed to listen() untouched. Plain numbers still work as before.
 const PORT: string | number = process.env.PORT || 3001;
 
 // --- Database -------------------------------------------------------------
@@ -105,11 +97,13 @@ function cleanField(value: unknown, maxLen: number): string | null {
   return trimmed;
 }
 
-app.get('/api/health', (_req, res) => {
+// Local development only. In production the site is static files plus iis/api/*.php, and
+// the front end calls the ".php" URLs, so both spellings are served here.
+app.get(['/api/health', '/api/health.php'], (_req, res) => {
   res.json({ ok: true, database: dbReady ? 'connected' : 'unavailable' });
 });
 
-app.post('/api/contact', async (req, res) => {
+app.post(['/api/contact', '/api/contact.php'], async (req, res) => {
   const ip = req.ip || 'unknown';
 
   // Honeypot: bots fill the hidden "website" field. Pretend success, store nothing.
@@ -155,7 +149,7 @@ app.post('/api/contact', async (req, res) => {
 // --- Static frontend ------------------------------------------------------
 
 // Prefer the dist/ next to this file, so the site still works if the host starts the
-// process from a different working directory (iisnode does not always use this one).
+// process from a different working directory.
 const distDir = fs.existsSync(path.resolve(here, 'dist'))
   ? path.resolve(here, 'dist')
   : path.resolve(process.cwd(), 'dist');

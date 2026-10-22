@@ -1,72 +1,47 @@
-# Deploying to Plesk (matrixgambia.com)
+# Deploying to Plesk for Windows (IIS)
 
-The site runs as a **single Node.js application**: one Express process serves the
-React build *and* the `/api` endpoints. The hosting is **Plesk on Windows/IIS**, where
-Node runs behind iisnode (Node 16.x at the time of writing).
+The site is deployed as **static files plus a small PHP contact API**. There is no Node.js
+in production.
 
-That environment has several quirks, and the steps below are written around them:
+```
+website folder/
+  index.html, assets/, logo.png, ...     the compiled React site
+  api/contact.php, api/health.php        the contact form backend (PHP + MySQL)
+  web.config                             IIS settings: page routing, MIME types, caching
+matrix.env                               database settings, ONE LEVEL ABOVE the website folder
+```
 
-| Quirk | What we do about it |
-| --- | --- |
-| The Node.js page has no "environment variables" box | Settings are read from a `matrix.env` file (step 4) |
-| `NPM install` on the server fails with `EPERM` | Ship `node_modules` ready-made inside a zip; never run NPM install |
-| File Manager rejects uploads over ~1 MB | Split zips, imported by URL (see "Getting the files onto the server") |
-| iisnode passes a named pipe in `PORT`, not a number | The server passes `PORT` to `listen()` untouched |
-| The app folder is the web root | `matrix.env` lives one level above it, where it cannot be downloaded |
+## Why not Node.js
+
+Node.js was tried first and abandoned. On this Plesk (Windows, Node 16, iisnode):
+
+- `NPM install` always fails with `EPERM` while writing `node_modules\.bin\*`, and so does
+  **Auto-configure**, which runs npm itself.
+- The Node.js page has no environment-variable screen.
+- Plesk will not regenerate a missing `web.config` while npm keeps failing.
+
+PHP 8.3 and MySQL 8 work without any of that.
 
 ## 1. Create the database
 
 Plesk → **Databases** → **Add Database**.
 
 - Database name: e.g. `matrix_site`
-- Create a database user and set a password
+- Related site: the site you are deploying
+- Create a database user and a **strong** password (the MySQL server accepts connections
+  from the internet, as is normal on shared hosting, so the password is the protection)
 
-**Choose the MySQL 8 server** in the *Database server* dropdown (the one labelled
-`v8.0.x`). Not the old `v5.1` one: it predates `utf8mb4`, so the table cannot be
-created there. Not MS SQL either: the app speaks MySQL. The MySQL 8 server is **not**
-on `localhost` (it was `208.91.198.197`), so note its address.
+**Choose the MySQL 8 server** in the *Database server* dropdown (`v8.0.x`). Not the old
+`v5.1` server: it predates `utf8mb4`. Not MS SQL: the API speaks MySQL. The MySQL 8 server
+is **not** `localhost` (it was `208.91.198.197`), so note its address.
 
-Plesk may add a prefix to the names you type. After creating, copy the name and user
-exactly as the Databases list shows them. The `contact_submissions` table is created
-automatically on first start.
+Plesk may add a prefix to the names you type. Copy the database name and user exactly as
+the Databases list shows them. The table is created automatically on first use.
 
-## 2. Build the bundle
+## 2. Settings file: `matrix.env`
 
-```bash
-npm install
-npm run build:deploy
-bash scripts/make-upload-zips.sh
-```
-
-This writes three zips into `deploy/`:
-
-| Zip | Contents |
-| --- | --- |
-| `matrix-upload-1-app.zip` | `index.js`, `package.json`, the site's HTML/JS/CSS |
-| `matrix-upload-2-images.zip` | logos and the hero images |
-| `matrix-server-and-modules.zip` | `index.js`, `package.json` and a ready-made `node_modules` |
-
-## 3. Getting the files onto the server
-
-Plesk's File Manager rejects even small uploads, so do not upload from the browser.
-Either:
-
-- **Import by URL** (no software needed). Publish the zips as a GitHub release asset,
-  then in File Manager use **+ → Import file via URL** with each link, and
-  right-click → **Extract Files**. The server downloads them itself, so no limit applies.
-- **FTP** (FileZilla): upload the contents of `deploy/app/`. Credentials are under
-  **Connection Info**. You would also need `node_modules` from the modules zip.
-
-Extract all three zips into the site folder (the subdomain's folder, or `httpdocs` for
-the main domain). A new subdomain starts with Plesk's placeholder files (`index.html`,
-`css/`, `img/`, `favicon.ico`): delete those first, and leave any `web.config` Plesk
-created. The folder should end up holding `index.js`, `package.json`, `dist/` and
-`node_modules/` directly.
-
-## 4. Settings file
-
-In File Manager, go to the **Home directory** (the folder *above* the site folder, the
-one that contains `httpdocs`), create a file called `matrix.env`, and put in it:
+In File Manager open the **Home directory**: the folder that *contains* the website
+folders (`httpdocs`, `preview.example.com`, ...). Create a file called `matrix.env` there:
 
 ```
 DB_HOST=<database server address from step 1>
@@ -75,43 +50,81 @@ DB_USER=<database user>
 DB_PASSWORD=<database password>
 ```
 
-Keep it above the web root so it can never be downloaded. For local development a
-`.env` file next to `server/index.ts` works too (see `.env.example`).
+It sits above the web root, so it can never be downloaded. Quotes around values, `#`
+comments and Windows line endings are all fine.
 
-## 5. Configure Node.js
-
-Plesk → the domain or subdomain → **Node.js**.
-
-| Setting | Value |
-| --- | --- |
-| Document Root / Application Root | the site folder |
-| Application Startup File | `index.js` (Plesk defaults to `app.js`; click it to change) |
-
-Do **not** click **NPM install**; the modules are already in place. Click
-**Enable Node.js**, then **Restart App**.
-
-## 6. Verify
-
-- `/api/health` → `{"ok":true,"database":"connected"}`
-
-  `"database":"unavailable"` means the site runs but the database settings are wrong:
-  check `matrix.env`, then Restart App.
-- Open **/clients** directly and refresh. It should render, not 404.
-- Submit the contact form, then look for the row in **Databases → phpMyAdmin**.
-
-## 7. DNS and HTTPS
-
-DNS for `matrixgambia.com` is managed outside Plesk (name servers `kheweul.net`).
-A subdomain must have an **A record** pointing at the Plesk server. Check where a name
-really points before debugging anything else:
+## 3. Build and publish the package
 
 ```bash
-nslookup new.matrixgambia.com
+npm install
+npm run build:iis
 ```
 
-A leftover record can send a name to another company's server. Once the name points
-at Plesk, issue a free Let's Encrypt certificate under **SSL/TLS Certificates**
-(this fails if DNS is not yet correct).
+This writes `deploy/matrix-site.zip` (the whole website folder, about 700 KB).
+
+Plesk's File Manager rejects even small browser uploads ("file is too big"), so get the
+zip onto the server by **URL import** instead. Publish it as a GitHub release asset:
+
+```bash
+gh release upload plesk-test-bundle deploy/matrix-site.zip --clobber
+```
+
+(create the release once with `gh release create plesk-test-bundle deploy/matrix-site.zip`).
+Delete the release after deploying if you do not want the bundle public; it contains no
+passwords. FTP (FileZilla; credentials under **Connection Info**) also works, uploading the
+**contents** of the zip.
+
+## 4. Put the files on the server
+
+1. **Files** → open the website folder (e.g. `preview.matrixgambia.com`).
+2. Delete everything inside it.
+3. **+ → Import file via URL** with the release link
+   `https://github.com/<owner>/<repo>/releases/download/plesk-test-bundle/matrix-site.zip`
+4. Right-click the zip → **Extract Files**.
+
+`index.html`, `assets/`, `api/` and `web.config` must sit directly in the website folder,
+not inside another folder.
+
+**Do not enable Node.js on the site.** If it is enabled, click **Disable Node.js** first, or
+Plesk's iisnode configuration will fight `web.config`.
+
+## 5. Verify
+
+- `/api/health.php` → `{"ok":true,"database":"connected"}`
+
+  If `"database":"unavailable"`, the `reason` tells you why (it never includes credentials):
+
+  | reason | meaning | fix |
+  | --- | --- | --- |
+  | `not_configured` | `matrix.env` is missing, in the wrong folder, or has no `DB_NAME`/`DB_USER` | recheck step 2: it must be in the folder ABOVE the website folder |
+  | `access_denied` | wrong user or password | correct them in `matrix.env` |
+  | `unknown_database` | wrong database name | copy it exactly from the Databases list |
+  | `database_not_permitted` | the user may not use this database | assign the user to it in Plesk |
+  | `cannot_connect` | wrong `DB_HOST` or port | use the address of the MySQL 8 server |
+  | `extension_missing` | PHP has no `mysqli` | enable it in Plesk's **PHP Settings** |
+
+  If `/api/health.php` shows the PHP source, or a 404/500, PHP is not enabled for the site:
+  turn it on under **PHP Settings** (or **Hosting Settings → PHP support**).
+- Open the home page and **/clients**, then refresh. They should load, not 404.
+- Send a contact form message, then look for the row in **Databases → phpMyAdmin**.
+- If the whole site shows a 500 error, the server lacks the IIS **URL Rewrite** module,
+  which `web.config` needs for page routing. Ask the host to enable it.
+
+## 6. DNS and HTTPS
+
+DNS for `matrixgambia.com` is managed outside Plesk (name servers `kheweul.net`), and a
+leftover record can send a name to another company's server. Check where a name really
+points before debugging anything else:
+
+```bash
+nslookup preview.matrixgambia.com
+```
+
+It must be `208.91.198.171`. Other names already resolve there through a wildcard record;
+`new.matrixgambia.com` has its own leftover record pointing at `192.185.165.135`.
+
+Once the name points at Plesk, issue a free Let's Encrypt certificate under **SSL/TLS
+Certificates**. It fails if DNS is wrong, and until then browsers show "Not secure".
 
 ## Reading submissions
 
@@ -123,12 +136,15 @@ ORDER BY created_at DESC;
 
 ## Updating the site later
 
-Re-run steps 2 and 3, extracting over the old files, then **Restart App**. The modules
-zip only needs re-importing if dependencies changed.
+Repeat steps 3 and 4. Deleting the folder contents first is safe: `matrix.env` is outside it,
+so the database settings survive.
 
-## Fallback: static-only hosting
+## Local development
 
-The React build can be served by IIS alone: put the contents of `dist/` in the site
-folder together with `deploy/web.config.static-only` (renamed `web.config`), which
-supplies the SPA routing rules. **The contact form will not work in this mode.** Do not
-leave that `web.config` in place when running the Node app.
+```bash
+npm run server   # API on port 3001, using ./.env (see .env.example)
+npm run dev      # site on port 3000, proxying /api to it
+```
+
+`server/index.ts` is a development stand-in for `iis/api/*.php`: same URLs, same rules. If
+you change one, change the other.
