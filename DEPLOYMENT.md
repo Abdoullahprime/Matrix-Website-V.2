@@ -11,7 +11,11 @@ Plesk → **Databases** → **Add Database**.
 - Database name: e.g. `matrix_contact`
 - Create a database user and set a password
 
-Note the name, user and password — you need them in step 4. The
+**Choose the MySQL 8 server** in the *Database server* dropdown (the one labelled
+`v8.0.x`). Not the old `v5.1` one: it predates `utf8mb4`, so the table cannot be
+created there. Not MS SQL either: the app speaks MySQL.
+
+Note the server address, name, user and password — you need them in step 4. The
 `contact_submissions` table is created automatically on first start.
 
 ## 2. Build the deployment bundle
@@ -51,7 +55,7 @@ Plesk → **Websites & Domains** → `matrixgambia.com` → **Node.js**.
 Under **Custom environment variables**, add:
 
 ```
-DB_HOST      localhost
+DB_HOST      <the database server address from step 1, e.g. 208.91.198.197>
 DB_NAME      <database name from step 1>
 DB_USER      <database user>
 DB_PASSWORD  <database password>
