@@ -98,3 +98,22 @@ served by IIS alone: upload the contents of `dist/` to `httpdocs` together with
 routing rules. **The contact form will not work in this mode** — it has no API to
 call. Do not leave that `web.config` in `httpdocs` when running the Node app; it
 overrides the config Plesk generates for iisnode.
+
+## If the upload is rejected as "too big"
+
+Plesk's File Manager refuses large uploads (it rejected a 1 MB zip). Split the bundle
+into two small compressed zips:
+
+```bash
+npm run build:deploy
+bash scripts/make-upload-zips.sh
+```
+
+This writes `deploy/matrix-upload-1-app.zip` (server and site code) and
+`deploy/matrix-upload-2-images.zip` (images). Upload and extract **both** into the
+same folder. If the form still refuses them, upload `deploy/app/` over FTP instead
+(credentials are under **Connection Info** on the domain page).
+
+A new subdomain starts with Plesk's placeholder page (`index.html`, `css/`, `img/`,
+`favicon.ico`). Delete those before extracting, so they cannot be served in place of the
+site, and leave any `web.config` that Plesk created.
