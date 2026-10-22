@@ -54,6 +54,7 @@ export default function LogoWall() {
                   src={src}
                   alt=""
                   decoding="async"
+                  fetchPriority="low"
                   className="h-14 w-auto max-w-[104px] object-contain shrink-0"
                 />
               ) : (

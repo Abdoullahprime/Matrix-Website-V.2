@@ -2,6 +2,10 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { ArrowRight } from 'lucide-react';
+// Imported (not placed in public/) so the build gives them a content hash, which lets the
+// server cache them for a year.
+import desktopShot from '../assets/hris-desktop.webp';
+import mobileShot from '../assets/hris-mobile.webp';
 
 export default function Hero() {
   return (
@@ -45,19 +49,19 @@ export default function Hero() {
           >
             <div className="relative">
               <img
-                src="/hris-desktop.webp"
+                src={desktopShot}
                 alt="Matrix HRIS dashboard on a desktop browser, showing workforce totals, new joins and pending approvals"
-                width={2000}
-                height={1347}
+                width={1400}
+                height={943}
                 fetchPriority="high"
                 decoding="async"
                 className="w-full h-auto select-none"
               />
               <motion.img
-                src="/hris-mobile.webp"
+                src={mobileShot}
                 alt="The same Matrix HRIS dashboard on a mobile phone"
-                width={560}
-                height={1101}
+                width={400}
+                height={786}
                 decoding="async"
                 initial={{ opacity: 0, y: 40 }}
                 animate={{ opacity: 1, y: 0 }}

@@ -1,10 +1,14 @@
 import React from 'react';
+// Imported so the build hashes the file and the server can cache it for a year.
+import logoImage from '../assets/logo.webp';
 
 export default function Logo({ className = "", light = false }: { className?: string, light?: boolean }) {
   const image = (
     <img
-      src="/logo.png"
+      src={logoImage}
       alt="Matrix Solutions Company Limited — Information Technology Solutions Integrator"
+      width={300}
+      height={119}
       className="h-14 w-auto"
     />
   );
