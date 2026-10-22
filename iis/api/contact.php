@@ -77,7 +77,27 @@ try {
     $stmt->close();
     $db->close();
 
-    mx_json(200, ['ok' => true]);
+    // The message is now safely stored. Tell the team by email too, but never let a mail
+    // problem lose or reject a submission: the visitor still gets a success reply.
+    try {
+        $to = mx_config()['MAIL_TO'];
+        $subject = 'New website enquiry from ' . mx_clean_header($fullName);
+        $body = "A new enquiry was sent through the Matrix Solutions website.\n\n"
+            . "Name:         {$fullName}\n"
+            . "Email:        {$email}\n"
+            . "Organization: {$organization}\n"
+            . "Interest:     {$interest}\n\n"
+            . "Message:\n{$message}\n\n"
+            . "--\n"
+            . 'Received ' . gmdate('Y-m-d H:i') . " UTC from IP {$ip}\n"
+            . "Reply to this email to answer {$fullName} directly.\n";
+        mx_send_mail($to, $subject, $body, $email);
+        mx_json(200, ['ok' => true, 'emailed' => true]);
+    } catch (Throwable $mailError) {
+        $reason = $mailError instanceof MxMailException ? $mailError->getMessage() : 'error';
+        error_log('Matrix contact form: saved, but the email failed (' . $reason . ')');
+        mx_json(200, ['ok' => true, 'emailed' => false, 'mailReason' => $reason]);
+    }
 } catch (Throwable $e) {
     error_log('Matrix contact form failed (' . mx_failure_reason($e) . '): ' . $e->getMessage());
     mx_json(503, ['error' => 'We could not save your message right now. Please email info@matrixgambia.com.']);

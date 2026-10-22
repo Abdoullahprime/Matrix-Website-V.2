@@ -35,7 +35,13 @@ function mx_config(): array
     if ($cfg !== null) {
         return $cfg;
     }
-    $cfg = ['DB_HOST' => 'localhost', 'DB_PORT' => '3306', 'DB_NAME' => '', 'DB_USER' => '', 'DB_PASSWORD' => ''];
+    $cfg = [
+        'DB_HOST' => 'localhost', 'DB_PORT' => '3306', 'DB_NAME' => '', 'DB_USER' => '', 'DB_PASSWORD' => '',
+        // Email notifications. Only SMTP_USER and SMTP_PASSWORD need setting for Gmail.
+        'SMTP_HOST' => 'smtp.gmail.com', 'SMTP_PORT' => '465', 'SMTP_SECURE' => '',
+        'SMTP_USER' => '', 'SMTP_PASSWORD' => '',
+        'MAIL_FROM_NAME' => 'Matrix Solutions Website', 'MAIL_TO' => 'info@matrixgambia.com',
+    ];
 
     $candidates = [
         (string)getenv('MATRIX_ENV_FILE'),
@@ -126,4 +132,146 @@ function mx_failure_reason(Throwable $e): string
         2002, 2003, 2006 => 'cannot_connect', // wrong host/port, or the server is unreachable
         default => 'error',
     };
+}
+
+// ---------------------------------------------------------------------------------------
+// Email notifications: a tiny SMTP client, so the site needs no mail library and no
+// server-side mail setup. Failures carry a short reason code, never credentials.
+// ---------------------------------------------------------------------------------------
+
+final class MxMailException extends RuntimeException
+{
+}
+
+/** Read one SMTP reply (it may span several lines). Returns [code, text]. */
+function mx_smtp_read($fp): array
+{
+    $text = '';
+    while (($line = fgets($fp, 1024)) !== false) {
+        $text .= $line;
+        if (strlen($line) >= 4 && $line[3] === ' ') {
+            return [(int)substr($line, 0, 3), $text];
+        }
+        if (strlen($line) < 4) {
+            break;
+        }
+    }
+    throw new MxMailException('no_response');
+}
+
+/** Send a command (empty = just read) and require one of the expected reply codes. */
+function mx_smtp_cmd($fp, string $command, array $okCodes, string $reason): string
+{
+    if ($command !== '') {
+        fwrite($fp, $command . "\r\n");
+    }
+    [$code, $text] = mx_smtp_read($fp);
+    if (!in_array($code, $okCodes, true)) {
+        throw new MxMailException($reason);
+    }
+    return $text;
+}
+
+/** Remove anything that could end a header line early (header injection). */
+function mx_clean_header(string $value): string
+{
+    return trim(preg_replace('/[\r\n\0]+/', ' ', $value) ?? '');
+}
+
+/**
+ * Send one plain-text email through the configured SMTP account.
+ * Throws MxMailException with a reason: not_configured, cannot_connect, tls_failed,
+ * no_response, rejected, auth_failed, recipient_refused, send_failed.
+ */
+function mx_send_mail(string $to, string $subject, string $body, string $replyTo = ''): void
+{
+    $c = mx_config();
+    $user = trim($c['SMTP_USER']);
+    $pass = $c['SMTP_PASSWORD'];
+    if ($user === '' || $pass === '') {
+        throw new MxMailException('not_configured');
+    }
+    // Google shows app passwords as "abcd efgh ijkl mnop"; the spaces are not part of it.
+    if (preg_match('/^[a-z]{4}( [a-z]{4}){3}$/i', $pass) === 1) {
+        $pass = str_replace(' ', '', $pass);
+    }
+
+    $host = $c['SMTP_HOST'];
+    $port = (int)$c['SMTP_PORT'];
+    $secure = strtolower(trim($c['SMTP_SECURE']));
+    if ($secure === '') {
+        $secure = $port === 465 ? 'ssl' : ($port === 587 ? 'starttls' : 'none');
+    }
+
+    // Verify the server's certificate against a bundled CA list, because Windows PHP often
+    // has none configured. Credentials are only ever sent over a verified connection.
+    $ctx = stream_context_create(['ssl' => [
+        'verify_peer' => true,
+        'verify_peer_name' => true,
+        'peer_name' => $host,
+        'SNI_enabled' => true,
+        'cafile' => __DIR__ . DIRECTORY_SEPARATOR . 'cacert.pem',
+    ]]);
+    $target = ($secure === 'ssl' ? 'ssl://' : 'tcp://') . $host . ':' . $port;
+    $fp = @stream_socket_client($target, $errno, $errstr, 8, STREAM_CLIENT_CONNECT, $ctx);
+    if (!$fp) {
+        throw new MxMailException(stripos((string)$errstr, 'ssl') !== false || stripos((string)$errstr, 'certificate') !== false
+            ? 'tls_failed' : 'cannot_connect');
+    }
+    stream_set_timeout($fp, 8);
+
+    try {
+        mx_smtp_cmd($fp, '', [220], 'rejected');
+        $name = preg_replace('/[^a-z0-9.-]/i', '', (string)($_SERVER['SERVER_NAME'] ?? '')) ?: 'localhost';
+        mx_smtp_cmd($fp, 'EHLO ' . $name, [250], 'rejected');
+
+        if ($secure === 'starttls') {
+            mx_smtp_cmd($fp, 'STARTTLS', [220], 'rejected');
+            if (!@stream_socket_enable_crypto($fp, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) {
+                throw new MxMailException('tls_failed');
+            }
+            mx_smtp_cmd($fp, 'EHLO ' . $name, [250], 'rejected');
+        }
+
+        mx_smtp_cmd($fp, 'AUTH LOGIN', [334], 'auth_failed');
+        mx_smtp_cmd($fp, base64_encode($user), [334], 'auth_failed');
+        mx_smtp_cmd($fp, base64_encode($pass), [235], 'auth_failed');
+
+        mx_smtp_cmd($fp, 'MAIL FROM:<' . $user . '>', [250], 'rejected');
+        mx_smtp_cmd($fp, 'RCPT TO:<' . $to . '>', [250, 251], 'recipient_refused');
+        mx_smtp_cmd($fp, 'DATA', [354], 'rejected');
+
+        $subject = mx_clean_header($subject);
+        $encodedSubject = function_exists('mb_encode_mimeheader')
+            ? mb_encode_mimeheader($subject, 'UTF-8', 'B', "\r\n")
+            : '=?UTF-8?B?' . base64_encode($subject) . '?=';
+        $fromName = mx_clean_header($c['MAIL_FROM_NAME']);
+        $headers = [
+            'Date: ' . gmdate('D, d M Y H:i:s') . ' +0000',
+            'From: ' . (function_exists('mb_encode_mimeheader') ? mb_encode_mimeheader($fromName, 'UTF-8', 'B', "\r\n") : $fromName) . ' <' . $user . '>',
+            'To: <' . $to . '>',
+            'Subject: ' . $encodedSubject,
+            'Message-ID: <' . bin2hex(random_bytes(12)) . '@' . $name . '>',
+            'MIME-Version: 1.0',
+            'Content-Type: text/plain; charset=UTF-8',
+            'Content-Transfer-Encoding: quoted-printable',
+        ];
+        if ($replyTo !== '' && filter_var($replyTo, FILTER_VALIDATE_EMAIL) !== false) {
+            $headers[] = 'Reply-To: <' . $replyTo . '>';
+        }
+        // Line breaks must be CRLF *before* quoted-printable encoding, or PHP encodes a bare
+        // LF as "=0A" and the whole message arrives as one long line.
+        $bodyCrlf = preg_replace('/\r\n|\r|\n/', "\r\n", $body) ?? $body;
+        $message = implode("\r\n", $headers) . "\r\n\r\n" . quoted_printable_encode($bodyCrlf);
+        $message = preg_replace('/^\./m', '..', $message) ?? $message; // SMTP "dot stuffing"
+
+        fwrite($fp, $message . "\r\n.\r\n");
+        [$code] = mx_smtp_read($fp);
+        if ($code !== 250) {
+            throw new MxMailException('send_failed');
+        }
+        @fwrite($fp, "QUIT\r\n");
+    } finally {
+        @fclose($fp);
+    }
 }

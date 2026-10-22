@@ -53,6 +53,40 @@ DB_PASSWORD=<database password>
 It sits above the web root, so it can never be downloaded. Quotes around values, `#`
 comments and Windows line endings are all fine.
 
+### Email notifications (optional, recommended)
+
+Every submission is saved to the database. To also get each one **by email**, add:
+
+```
+SMTP_USER=<the Gmail address that sends the mail>
+SMTP_PASSWORD=<a Google App Password for that account>
+```
+
+That is all Gmail needs. Optional extras and their defaults:
+
+| Key | Default | Meaning |
+| --- | --- | --- |
+| `MAIL_TO` | `info@matrixgambia.com` | where enquiries are delivered |
+| `MAIL_FROM_NAME` | `Matrix Solutions Website` | sender display name |
+| `SMTP_HOST` / `SMTP_PORT` | `smtp.gmail.com` / `465` | use port `587` for STARTTLS |
+| `SMTP_SECURE` | from the port | `ssl`, `starttls` or `none` |
+
+Create the app password at <https://myaccount.google.com/apppasswords> (the account needs
+2-Step Verification). **It goes only in `matrix.env` on the server. Never put it in the
+code, a commit or a zip**: the repository is public. If it leaks, delete it on that same
+Google page and make a new one.
+
+How it behaves:
+
+- The database save happens **first**. If the email then fails, the visitor still sees
+  success and nothing is lost; the response carries `"emailed":false` and a `mailReason`.
+- The email's *Reply-To* is the visitor's address, so replying answers them directly.
+- The TLS certificate is checked against the bundled `api/cacert.pem` before the password
+  is sent. Refresh that file (see `scripts/make-iis-package.sh`) every year or so.
+- `mailReason` values: `not_configured` (no `SMTP_USER`/`SMTP_PASSWORD`), `cannot_connect`
+  (the host blocks outgoing mail ports; try 587), `tls_failed`, `auth_failed` (wrong app
+  password), `recipient_refused`, `rejected`, `send_failed`, `no_response`.
+
 ## 3. Build and publish the package
 
 ```bash
