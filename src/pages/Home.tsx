@@ -11,6 +11,7 @@ import IndustryChips from '../components/IndustryChips';
 import FaqSection from '../components/FaqSection';
 import SectionLabel from '../components/SectionLabel';
 import usePageMeta from '../hooks/usePageMeta';
+import { getPageMeta } from '../seo/meta';
 
 const stats = [
   {
@@ -37,10 +38,7 @@ const expertise = [
 ];
 
 export default function Home() {
-  usePageMeta(
-    'Enterprise IT Solutions in The Gambia',
-    'Enterprise software, core banking, HR & payroll, IT infrastructure and cyber security for government, financial and private sector organizations across West Africa.'
-  );
+  usePageMeta(getPageMeta('/'));
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>

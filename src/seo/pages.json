@@ -1,0 +1,43 @@
+{
+  "siteUrl": "https://matrixgambia.com",
+  "siteName": "Matrix Solutions Company Limited",
+  "defaultImage": "/og-image.jpg",
+  "pages": [
+    {
+      "path": "/",
+      "title": "Enterprise IT Solutions in The Gambia | Matrix Solutions",
+      "description": "HR and payroll, accounting, core banking and microfinance software, plus IT infrastructure and cyber security, built and supported in The Gambia.",
+      "h1": "Banks, hospitals, councils, insurers, agencies and businesses run on Matrix."
+    },
+    {
+      "path": "/solutions",
+      "title": "Software & IT Services Catalogue | Matrix Solutions Gambia",
+      "description": "40 products and services across finance, HR and payroll, banking, specialized solutions and IT security, from Matrix Solutions in The Gambia.",
+      "h1": "Launch faster with Matrix solutions, built for your industry."
+    },
+    {
+      "path": "/clients",
+      "title": "Our Clients: Banks, Government & Hospitals | Matrix Solutions",
+      "description": "Revenue authorities, banks, hospitals, councils and insurers across The Gambia run on Matrix Solutions. See who we work with and what we delivered.",
+      "h1": "Organizations that run on Matrix Solutions"
+    },
+    {
+      "path": "/about",
+      "title": "About Matrix Solutions | IT Solutions Company, The Gambia",
+      "description": "Matrix Solutions is an IT solutions integrator and Oracle Financial Services Gold Partner delivering software to government and private organizations.",
+      "h1": "About Matrix Solutions"
+    },
+    {
+      "path": "/resources",
+      "title": "Brochures & Company Profile | Matrix Solutions",
+      "description": "Request the Matrix Solutions company profile, product brochures and service catalogues for enterprise software, banking systems and IT services.",
+      "h1": "Resources"
+    },
+    {
+      "path": "/contact",
+      "title": "Contact Matrix Solutions | Request a Demo in The Gambia",
+      "description": "Talk to Matrix Solutions in Kanifing, The Gambia. Request a demo or consultation for HR, payroll, banking and IT infrastructure software.",
+      "h1": "Contact Matrix Solutions"
+    }
+  ]
+}

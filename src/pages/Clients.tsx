@@ -4,12 +4,10 @@ import ClientList from '../components/ClientList';
 import CaseStudies from '../components/CaseStudies';
 import LogoWall from '../components/LogoWall';
 import usePageMeta from '../hooks/usePageMeta';
+import { getPageMeta } from '../seo/meta';
 
 export default function Clients() {
-  usePageMeta(
-    'Our Clients',
-    'Matrix Solutions serves government agencies, banks, hospitals and enterprises across The Gambia and West Africa. Browse our client network and implemented solutions.'
-  );
+  usePageMeta(getPageMeta('/clients'));
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>

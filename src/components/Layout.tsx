@@ -4,6 +4,7 @@ import { Menu, X, Globe, Mail, Phone, MapPin, Linkedin, Twitter } from 'lucide-r
 import { motion, AnimatePresence } from 'motion/react';
 
 import Logo from './Logo';
+import solutionPages from '../data/solutionPages.json';
 
 const navItems = [
   { name: 'Solutions', to: '/solutions' },
@@ -135,10 +136,10 @@ export default function Layout() {
             <div>
               <h4 className="font-bold text-white mb-8 uppercase text-xs tracking-widest">Solutions</h4>
               <ul className="space-y-4 text-sm text-slate-400 font-medium">
-                <li><Link to="/solutions" className="hover:text-white transition-colors">Public Sector & Governance</Link></li>
-                <li><Link to="/solutions" className="hover:text-white transition-colors">Financial & Banking Systems</Link></li>
-                <li><Link to="/solutions" className="hover:text-white transition-colors">Human Capital Management</Link></li>
-                <li><Link to="/solutions" className="hover:text-white transition-colors">Enterprise Operations</Link></li>
+                {solutionPages.map((sp) => (
+                  <li key={sp.slug}><Link to={`/solutions/${sp.slug}`} className="hover:text-white transition-colors">{sp.navLabel}</Link></li>
+                ))}
+                <li><Link to="/solutions" className="hover:text-white transition-colors">All solutions</Link></li>
               </ul>
             </div>
 

@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
-    "build:iis": "npm run build && bash scripts/make-iis-package.sh"
+    "build:iis": "npm run build && node scripts/seo-build.mjs && bash scripts/make-iis-package.sh"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.14",

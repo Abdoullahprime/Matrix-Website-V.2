@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Shield, Users, CheckCircle2, ArrowRight } from 'lucide-react';
 import usePageMeta from '../hooks/usePageMeta';
+import { getPageMeta } from '../seo/meta';
 
 const values = [
   { title: "Integrity", desc: "Transparent, auditable systems for high-trust environments." },
@@ -35,10 +36,7 @@ function CompanyIllustration() {
 }
 
 export default function About() {
-  usePageMeta(
-    'About Us',
-    'Matrix Solutions Company Limited is an IT solutions integrator and Oracle Gold Partner providing enterprise software to government, financial and private sector organizations in West Africa.'
-  );
+  usePageMeta(getPageMeta('/about'));
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white">
@@ -54,7 +52,7 @@ export default function About() {
             >
               <div className="space-y-6">
                 <div className="text-matrix-blue-primary text-sm font-extrabold uppercase tracking-[0.2em]">
-                  Our Story
+                  About Matrix Solutions
                 </div>
                 <h1 className="text-5xl md:text-6xl font-extrabold text-matrix-navy leading-tight">
                   Expertise is <span className="text-matrix-blue-primary">built in</span>.

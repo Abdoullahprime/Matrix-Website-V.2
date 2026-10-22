@@ -6,6 +6,7 @@ import ScrollToTop from './components/ScrollToTop';
 import Preloader from './components/Preloader';
 import Home from './pages/Home';
 import Solutions from './pages/Solutions';
+import SolutionDetail from './pages/SolutionDetail';
 import Clients from './pages/Clients';
 import About from './pages/About';
 import Resources from './pages/Resources';
@@ -54,6 +55,7 @@ export default function App() {
               <Route element={<Layout />}>
                 <Route index element={<Home />} />
                 <Route path="solutions" element={<Solutions />} />
+                <Route path="solutions/:slug" element={<SolutionDetail />} />
                 <Route path="clients" element={<Clients />} />
                 <Route path="about" element={<About />} />
                 <Route path="resources" element={<Resources />} />

@@ -5,7 +5,12 @@ import { Plus, ArrowRight } from 'lucide-react';
 import SectionLabel from './SectionLabel';
 
 // Answers only restate what the rest of the site already says about Matrix.
-const faqs = [
+export interface FaqItem {
+  q: string;
+  a: string;
+}
+
+export const HOME_FAQS: FaqItem[] = [
   {
     q: 'What does Matrix Solutions do?',
     a: 'Matrix Solutions is an information technology solutions company. We build and implement software for government, non-government and private sector organizations, deliver core banking and financial systems as an Oracle Financial Services Software gold partner, and provide IT infrastructure and cyber security services.',
@@ -32,13 +37,30 @@ const faqs = [
   },
 ];
 
-export default function FaqSection() {
+interface FaqSectionProps {
+  items?: FaqItem[];
+  labelNumber?: string;
+  label?: string;
+  heading?: string;
+  intro?: string;
+  /** Emit FAQPage structured data from here. Solution pages get it from the build instead. */
+  emitJsonLd?: boolean;
+}
+
+export default function FaqSection({
+  items = HOME_FAQS,
+  labelNumber = '05',
+  label = 'Questions we get asked',
+  heading = 'Before you get in touch.',
+  intro = 'The short answers to what organizations usually ask us first.',
+  emitJsonLd = true,
+}: FaqSectionProps) {
   const [open, setOpen] = useState<number | null>(0);
 
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
-    mainEntity: faqs.map((f) => ({
+    mainEntity: items.map((f) => ({
       '@type': 'Question',
       name: f.q,
       acceptedAnswer: { '@type': 'Answer', text: f.a },
@@ -47,16 +69,16 @@ export default function FaqSection() {
 
   return (
     <section className="section-padding bg-white">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      {emitJsonLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />}
       <div className="container-custom">
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] gap-12 lg:gap-20 items-start">
           <div className="space-y-5 lg:sticky lg:top-32">
-            <SectionLabel number="05">Questions we get asked</SectionLabel>
+            <SectionLabel number={labelNumber}>{label}</SectionLabel>
             <h2 className="text-4xl md:text-5xl font-extrabold text-matrix-navy leading-tight">
-              Before you get in touch.
+              {heading}
             </h2>
             <p className="text-matrix-slate text-lg font-medium">
-              The short answers to what organizations usually ask us first.
+              {intro}
             </p>
             <Link to="/contact" className="btn-link group">
               Ask us something else
@@ -65,7 +87,7 @@ export default function FaqSection() {
           </div>
 
           <div className="divide-y divide-slate-200 border-y border-slate-200">
-            {faqs.map((item, i) => {
+            {items.map((item, i) => {
               const isOpen = open === i;
               return (
                 <div key={item.q}>

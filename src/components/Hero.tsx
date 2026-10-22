@@ -81,6 +81,12 @@ export default function Hero() {
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-16 lg:gap-10 items-center">
           <div className="space-y-8">
             <div className="space-y-5">
+              <motion.p
+                {...fadeUp(0)}
+                className="text-xs md:text-sm font-extrabold uppercase tracking-[0.2em] text-matrix-blue-primary"
+              >
+                Enterprise software &amp; IT services in The Gambia
+              </motion.p>
               {/* Screen readers get the whole sentence once, not a word that keeps changing. */}
               <h1 className="text-5xl sm:text-6xl font-extrabold text-matrix-navy leading-[1.1] tracking-tight">
                 <span className="sr-only">{FULL_SENTENCE}</span>
@@ -99,7 +105,7 @@ export default function Hero() {
                 className="text-xl md:text-2xl text-matrix-slate font-medium max-w-xl leading-relaxed"
               >
                 Banking systems, HR and payroll, IT infrastructure and cyber security,
-                delivered by one local team.
+                delivered by one local team in The Gambia.
               </motion.p>
             </div>
 

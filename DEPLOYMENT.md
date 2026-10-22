@@ -94,7 +94,9 @@ npm install
 npm run build:iis
 ```
 
-This writes `deploy/matrix-site.zip` (the whole website folder, about 700 KB).
+This builds the site, runs the SEO step (a separate HTML file per page, `sitemap.xml`, `robots.txt`
+and the matching `web.config` rules; see [SEO.md](SEO.md)), and writes `deploy/matrix-site.zip` (the
+whole website folder, about 650 KB).
 
 Plesk's File Manager rejects even small browser uploads ("file is too big"), so get the
 zip onto the server by **URL import** instead. Publish it as a GitHub release asset:

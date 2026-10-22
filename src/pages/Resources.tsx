@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { FileText, ArrowRight } from 'lucide-react';
 import usePageMeta from '../hooks/usePageMeta';
+import { getPageMeta } from '../seo/meta';
 
 const resources = [
   { title: 'Company Profile', desc: 'An overview of Matrix Solutions, our history, partnerships, and service portfolio.' },
@@ -12,10 +13,7 @@ const resources = [
 ];
 
 export default function Resources() {
-  usePageMeta(
-    'Resources',
-    'Request Matrix Solutions company profiles, product brochures, and service catalogues for enterprise software, banking systems, and IT services.'
-  );
+  usePageMeta(getPageMeta('/resources'));
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white">

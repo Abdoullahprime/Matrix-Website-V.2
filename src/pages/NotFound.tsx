@@ -3,7 +3,13 @@ import { Link } from 'react-router-dom';
 import usePageMeta from '../hooks/usePageMeta';
 
 export default function NotFound() {
-  usePageMeta('Page Not Found');
+  // Unknown addresses are served the same app shell, so tell search engines not to index them.
+  usePageMeta({
+    path: '/404',
+    title: 'Page not found | Matrix Solutions',
+    description: 'The page you are looking for does not exist or has moved.',
+    noindex: true,
+  });
 
   return (
     <div className="section-padding bg-white">

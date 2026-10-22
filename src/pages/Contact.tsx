@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { Mail, Phone, MapPin, Send, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
 import usePageMeta from '../hooks/usePageMeta';
+import { getPageMeta } from '../seo/meta';
 
 const INTEREST_OPTIONS = [
   'Human Capital Management (HRMIS)',
@@ -24,10 +25,7 @@ const emptyForm = {
 type FormState = typeof emptyForm;
 
 export default function Contact() {
-  usePageMeta(
-    'Contact Us',
-    'Contact Matrix Solutions Company Limited in Kanifing, The Gambia. Request a demo or consultation for enterprise software, banking systems, and IT services.'
-  );
+  usePageMeta(getPageMeta('/contact'));
 
   const [form, setForm] = useState<FormState>(emptyForm);
   const [status, setStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
@@ -82,7 +80,7 @@ export default function Contact() {
             >
               <div className="space-y-6">
                 <div className="text-matrix-blue-primary text-sm font-extrabold uppercase tracking-[0.2em]">
-                  Contact Us
+                  Contact Matrix Solutions
                 </div>
                 <h1 className="text-5xl md:text-6xl font-extrabold text-matrix-navy leading-tight">
                   Let’s build your <span className="text-matrix-blue-primary">enterprise future</span>.

@@ -176,7 +176,7 @@ export default function ClientList() {
       <div className="container-custom">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-20">
           <div className="space-y-2">
-            <h2 className="text-3xl md:text-4xl font-extrabold text-matrix-navy">Our Client Network</h2>
+            <h1 className="text-3xl md:text-4xl font-extrabold text-matrix-navy">Organizations that run on Matrix Solutions</h1>
             <p className="text-matrix-slate font-medium">Hover over or tap a client to see implemented solutions.</p>
           </div>
           <div className="relative max-w-md w-full">
