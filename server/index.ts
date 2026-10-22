@@ -1,10 +1,32 @@
-import 'dotenv/config';
+import dotenv from 'dotenv';
 import express from 'express';
 import mysql from 'mysql2/promise';
 import path from 'path';
 import fs from 'fs';
 
-const PORT = Number(process.env.PORT || 3001);
+// Directory of this file. Under tsx (ESM, dev) __dirname does not exist.
+const here = typeof __dirname !== 'undefined' ? __dirname : process.cwd();
+
+// --- Settings -------------------------------------------------------------
+// Plesk on Windows (iisnode) has no screen for environment variables, so settings are
+// read from a file. First match wins for each key, and real environment variables
+// always win. Looked up in order:
+//   1. the file named by MATRIX_ENV_FILE
+//   2. ../matrix.env  (the hosting account's home directory, ABOVE the web root, so it
+//                      can never be downloaded; recommended on Plesk)
+//   3. ./.env         (next to this file; convenient for local development)
+for (const file of [
+  process.env.MATRIX_ENV_FILE,
+  path.resolve(here, '..', 'matrix.env'),
+  path.resolve(here, '.env'),
+  path.resolve(process.cwd(), '.env'),
+]) {
+  if (file && fs.existsSync(file)) dotenv.config({ path: file, quiet: true });
+}
+
+// Behind iisnode, PORT is a named pipe (for example \\.\pipe\abc123), not a number, so
+// it must be passed to listen() untouched. Plain numbers still work as before.
+const PORT: string | number = process.env.PORT || 3001;
 
 // --- Database -------------------------------------------------------------
 // MySQL rather than a file-based store: Plesk Windows hosting does not grant
@@ -132,9 +154,11 @@ app.post('/api/contact', async (req, res) => {
 
 // --- Static frontend ------------------------------------------------------
 
-const distDir = fs.existsSync(path.resolve(process.cwd(), 'dist'))
-  ? path.resolve(process.cwd(), 'dist')
-  : path.resolve(__dirname, 'dist');
+// Prefer the dist/ next to this file, so the site still works if the host starts the
+// process from a different working directory (iisnode does not always use this one).
+const distDir = fs.existsSync(path.resolve(here, 'dist'))
+  ? path.resolve(here, 'dist')
+  : path.resolve(process.cwd(), 'dist');
 
 if (fs.existsSync(distDir)) {
   app.use(
@@ -155,7 +179,13 @@ if (fs.existsSync(distDir)) {
   console.warn(`No frontend build found at ${distDir}. Serving API only.`);
 }
 
+// A stray rejected promise (for example a dropped database connection) must not take
+// the whole site down.
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled rejection:', reason instanceof Error ? reason.message : reason);
+});
+
 app.listen(PORT, () => {
-  console.log(`Matrix Solutions site listening on port ${PORT}`);
+  console.log(`Matrix Solutions site listening on ${typeof PORT === 'number' ? `port ${PORT}` : PORT}`);
   void initDb();
 });

@@ -1,87 +1,119 @@
 # Deploying to Plesk (matrixgambia.com)
 
 The site runs as a **single Node.js application**: one Express process serves the
-React build *and* the `/api` endpoints. Hosting is Plesk on Windows/IIS, where
-Node runs behind iisnode.
+React build *and* the `/api` endpoints. The hosting is **Plesk on Windows/IIS**, where
+Node runs behind iisnode (Node 16.x at the time of writing).
+
+That environment has several quirks, and the steps below are written around them:
+
+| Quirk | What we do about it |
+| --- | --- |
+| The Node.js page has no "environment variables" box | Settings are read from a `matrix.env` file (step 4) |
+| `NPM install` on the server fails with `EPERM` | Ship `node_modules` ready-made inside a zip; never run NPM install |
+| File Manager rejects uploads over ~1 MB | Split zips, imported by URL (see "Getting the files onto the server") |
+| iisnode passes a named pipe in `PORT`, not a number | The server passes `PORT` to `listen()` untouched |
+| The app folder is the web root | `matrix.env` lives one level above it, where it cannot be downloaded |
 
 ## 1. Create the database
 
 Plesk → **Databases** → **Add Database**.
 
-- Database name: e.g. `matrix_contact`
+- Database name: e.g. `matrix_site`
 - Create a database user and set a password
 
 **Choose the MySQL 8 server** in the *Database server* dropdown (the one labelled
 `v8.0.x`). Not the old `v5.1` one: it predates `utf8mb4`, so the table cannot be
-created there. Not MS SQL either: the app speaks MySQL.
+created there. Not MS SQL either: the app speaks MySQL. The MySQL 8 server is **not**
+on `localhost` (it was `208.91.198.197`), so note its address.
 
-Note the server address, name, user and password — you need them in step 4. The
-`contact_submissions` table is created automatically on first start.
+Plesk may add a prefix to the names you type. After creating, copy the name and user
+exactly as the Databases list shows them. The `contact_submissions` table is created
+automatically on first start.
 
-## 2. Build the deployment bundle
-
-Locally:
+## 2. Build the bundle
 
 ```bash
 npm install
 npm run build:deploy
+bash scripts/make-upload-zips.sh
 ```
 
-This produces `deploy/app/` containing exactly what gets uploaded:
+This writes three zips into `deploy/`:
 
-| File | Purpose |
+| Zip | Contents |
 | --- | --- |
-| `index.js` | the compiled Express server |
-| `package.json` | runtime dependencies only (express, mysql2, dotenv) |
-| `dist/` | the compiled React site |
+| `matrix-upload-1-app.zip` | `index.js`, `package.json`, the site's HTML/JS/CSS |
+| `matrix-upload-2-images.zip` | logos and the hero images |
+| `matrix-server-and-modules.zip` | `index.js`, `package.json` and a ready-made `node_modules` |
 
-## 3. Upload
+## 3. Getting the files onto the server
 
-Upload the **contents** of `deploy/app/` into `httpdocs` (Plesk **Files**, or FTP
-via **Connection Info**). Do not upload `node_modules` — Plesk installs it.
+Plesk's File Manager rejects even small uploads, so do not upload from the browser.
+Either:
 
-`httpdocs` should end up containing `index.js`, `package.json` and `dist/`.
+- **Import by URL** (no software needed). Publish the zips as a GitHub release asset,
+  then in File Manager use **+ → Import file via URL** with each link, and
+  right-click → **Extract Files**. The server downloads them itself, so no limit applies.
+- **FTP** (FileZilla): upload the contents of `deploy/app/`. Credentials are under
+  **Connection Info**. You would also need `node_modules` from the modules zip.
 
-## 4. Configure the Node.js application
+Extract all three zips into the site folder (the subdomain's folder, or `httpdocs` for
+the main domain). A new subdomain starts with Plesk's placeholder files (`index.html`,
+`css/`, `img/`, `favicon.ico`): delete those first, and leave any `web.config` Plesk
+created. The folder should end up holding `index.js`, `package.json`, `dist/` and
+`node_modules/` directly.
 
-Plesk → **Websites & Domains** → `matrixgambia.com` → **Node.js**.
+## 4. Settings file
+
+In File Manager, go to the **Home directory** (the folder *above* the site folder, the
+one that contains `httpdocs`), create a file called `matrix.env`, and put in it:
+
+```
+DB_HOST=<database server address from step 1>
+DB_NAME=<database name from step 1>
+DB_USER=<database user>
+DB_PASSWORD=<database password>
+```
+
+Keep it above the web root so it can never be downloaded. For local development a
+`.env` file next to `server/index.ts` works too (see `.env.example`).
+
+## 5. Configure Node.js
+
+Plesk → the domain or subdomain → **Node.js**.
 
 | Setting | Value |
 | --- | --- |
-| Document Root | `/httpdocs` |
-| Application Root | `/httpdocs` |
-| Application Startup File | `index.js` |
+| Document Root / Application Root | the site folder |
+| Application Startup File | `index.js` (Plesk defaults to `app.js`; click it to change) |
 
-Under **Custom environment variables**, add:
+Do **not** click **NPM install**; the modules are already in place. Click
+**Enable Node.js**, then **Restart App**.
 
+## 6. Verify
+
+- `/api/health` → `{"ok":true,"database":"connected"}`
+
+  `"database":"unavailable"` means the site runs but the database settings are wrong:
+  check `matrix.env`, then Restart App.
+- Open **/clients** directly and refresh. It should render, not 404.
+- Submit the contact form, then look for the row in **Databases → phpMyAdmin**.
+
+## 7. DNS and HTTPS
+
+DNS for `matrixgambia.com` is managed outside Plesk (name servers `kheweul.net`).
+A subdomain must have an **A record** pointing at the Plesk server. Check where a name
+really points before debugging anything else:
+
+```bash
+nslookup new.matrixgambia.com
 ```
-DB_HOST      <the database server address from step 1, e.g. 208.91.198.197>
-DB_NAME      <database name from step 1>
-DB_USER      <database user>
-DB_PASSWORD  <database password>
-```
 
-Then click **NPM Install**, and **Enable Node.js** / **Restart App**.
-
-## 5. Verify
-
-- `https://matrixgambia.com/api/health` → `{"ok":true,"database":"connected"}`
-
-  If it says `"database":"unavailable"`, the site is running but the credentials
-  are wrong — check the environment variables and restart the app.
-- Load the site, open **/clients** directly and hard-refresh. It should render,
-  not 404. That confirms the SPA fallback is working.
-- Submit the contact form, then check the `contact_submissions` table in
-  **Databases → phpMyAdmin**.
-
-## 6. Enable HTTPS
-
-Plesk showed **"Domain not secured"**. Go to **SSL/TLS Certificates** and issue a
-free Let's Encrypt certificate, then turn on the permanent HTTPS redirect.
+A leftover record can send a name to another company's server. Once the name points
+at Plesk, issue a free Let's Encrypt certificate under **SSL/TLS Certificates**
+(this fails if DNS is not yet correct).
 
 ## Reading submissions
-
-Plesk → **Databases** → your database → **phpMyAdmin**:
 
 ```sql
 SELECT created_at, full_name, email, organization, interest, message
@@ -91,33 +123,12 @@ ORDER BY created_at DESC;
 
 ## Updating the site later
 
-Re-run `npm run build:deploy`, re-upload the contents of `deploy/app/`, and click
-**Restart App** in Plesk. `NPM Install` only needs re-running if dependencies changed.
+Re-run steps 2 and 3, extracting over the old files, then **Restart App**. The modules
+zip only needs re-importing if dependencies changed.
 
 ## Fallback: static-only hosting
 
-If the Node app ever has to be taken out of the picture, the React build can be
-served by IIS alone: upload the contents of `dist/` to `httpdocs` together with
-`deploy/web.config.static-only` (renamed to `web.config`), which supplies the SPA
-routing rules. **The contact form will not work in this mode** — it has no API to
-call. Do not leave that `web.config` in `httpdocs` when running the Node app; it
-overrides the config Plesk generates for iisnode.
-
-## If the upload is rejected as "too big"
-
-Plesk's File Manager refuses large uploads (it rejected a 1 MB zip). Split the bundle
-into two small compressed zips:
-
-```bash
-npm run build:deploy
-bash scripts/make-upload-zips.sh
-```
-
-This writes `deploy/matrix-upload-1-app.zip` (server and site code) and
-`deploy/matrix-upload-2-images.zip` (images). Upload and extract **both** into the
-same folder. If the form still refuses them, upload `deploy/app/` over FTP instead
-(credentials are under **Connection Info** on the domain page).
-
-A new subdomain starts with Plesk's placeholder page (`index.html`, `css/`, `img/`,
-`favicon.ico`). Delete those before extracting, so they cannot be served in place of the
-site, and leave any `web.config` that Plesk created.
+The React build can be served by IIS alone: put the contents of `dist/` in the site
+folder together with `deploy/web.config.static-only` (renamed `web.config`), which
+supplies the SPA routing rules. **The contact form will not work in this mode.** Do not
+leave that `web.config` in place when running the Node app.
