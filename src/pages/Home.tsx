@@ -4,6 +4,7 @@ import { motion } from 'motion/react';
 import { Users, Globe, Handshake } from 'lucide-react';
 import Hero from '../components/Hero';
 import LogoWall from '../components/LogoWall';
+import PartnersCarousel from '../components/PartnersCarousel';
 import SolutionsGrid from '../components/SolutionsGrid';
 import CaseStudies from '../components/CaseStudies';
 import ProcessStrip from '../components/ProcessStrip';
@@ -88,6 +89,7 @@ export default function Home() {
       <IndustryChips />
       <CaseStudies />
       <FaqSection />
+      <PartnersCarousel title="Our Partners" />
 
       {/* CTA Section */}
       <section className="section-padding bg-matrix-navy text-white text-center">
