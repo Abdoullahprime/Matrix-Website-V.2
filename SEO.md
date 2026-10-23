@@ -70,3 +70,7 @@ Rich Results Test to confirm the structured data, and into PageSpeed Insights fo
   server-side render would be faster for crawlers. Worth doing only if indexing proves slow.
 - Unknown addresses show the "page not found" screen but the server still answers with a normal
   status; the page is marked `noindex` so it cannot appear in search results.
+
+## Blog posts and search engines
+
+`/blog/<slug>` is rewritten (see `web.config`) to `api/post.php`, which fills the built `index.html` with the post's own title, description, canonical, share image and `BlogPosting` + `BreadcrumbList` data, then the React page loads as usual. Unknown or draft slugs get a 404 status. `/blog` filters, search and sort carry `noindex` and point back to `/blog`; `?page=N` keeps its own address. `/sitemap.xml` is live (`api/sitemap.php`): fixed pages without dates, posts with their last change and cover image. `robots.txt` allows `/api/posts.php`, `/api/media.php` and `/api/sitemap.php` (needed to render posts and images) and blocks the rest of `/api/` and `/admin`.

@@ -14,6 +14,8 @@ export interface PageMeta {
   description: string;
   h1?: string;
   noindex?: boolean;
+  /** Share image, as a path on this site (defaults to the site-wide image). */
+  image?: string;
 }
 
 export const solutionPath = (slug: string) => `/solutions/${slug}`;

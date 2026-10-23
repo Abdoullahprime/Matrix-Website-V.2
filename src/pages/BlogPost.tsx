@@ -4,7 +4,7 @@ import { ArrowLeft, Clock, Loader2 } from 'lucide-react';
 import usePageMeta from '../hooks/usePageMeta';
 import BlogBlocks from '../components/BlogBlocks';
 import NotFound from './NotFound';
-import { PostFull, fetchPost, formatDate, readingMinutes } from '../lib/blog';
+import { PostFull, fetchPost, formatDate, readingMinutes, seoTitle } from '../lib/blog';
 
 export default function BlogPost() {
   const { slug = '' } = useParams();
@@ -30,9 +30,10 @@ export default function BlogPost() {
   // Title, description and canonical follow the post once it has loaded.
   usePageMeta({
     path: `/blog/${slug}`,
-    title: post ? `${post.title} | Matrix Solutions` : 'Blog | Matrix Solutions',
+    title: post ? seoTitle(post.title) : 'Blog | Matrix Solutions',
     description: post?.excerpt || 'News, guides and insights from Matrix Solutions.',
     noindex: state === 'missing',
+    image: post?.cover ?? undefined,
   });
 
   if (state === 'missing') return <NotFound />;

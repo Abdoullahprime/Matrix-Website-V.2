@@ -10,13 +10,20 @@ import { PostList, SortOrder, fetchPosts, formatDate } from '../lib/blog';
  * in the address (?q=…&sort=oldest&category=…&page=2) so a search can be shared or bookmarked.
  */
 export default function BlogIndex() {
-  usePageMeta(getPageMeta('/blog'));
-
   const [params, setParams] = useSearchParams();
   const q = params.get('q') ?? '';
   const sort: SortOrder = params.get('sort') === 'oldest' ? 'oldest' : 'newest';
   const category = params.get('category') ?? '';
   const page = Math.max(1, Number(params.get('page')) || 1);
+
+  // Searches, sorts and topic filters are not pages worth indexing: they point back to /blog.
+  // Page 2, 3... of the plain list are real pages and keep their own address.
+  const base = getPageMeta('/blog');
+  usePageMeta({
+    ...base,
+    path: page > 1 && !q && !category && sort === 'newest' ? `/blog?page=${page}` : '/blog',
+    noindex: q !== '' || category !== '' || sort === 'oldest',
+  });
 
   const [typed, setTyped] = useState(q);
   const [data, setData] = useState<PostList | null>(null);

@@ -30,7 +30,7 @@ const meta = (key: 'name' | 'property', name: string, content: string) =>
 export default function usePageMeta(page: PageMeta) {
   useEffect(() => {
     const url = absoluteUrl(page.path);
-    const image = SITE_URL + DEFAULT_IMAGE;
+    const image = SITE_URL + (page.image ?? DEFAULT_IMAGE);
 
     document.title = page.title;
     meta('name', 'description', page.description);
@@ -56,5 +56,5 @@ export default function usePageMeta(page: PageMeta) {
     meta('name', 'twitter:title', page.title);
     meta('name', 'twitter:description', page.description);
     meta('name', 'twitter:image', image);
-  }, [page.path, page.title, page.description, page.noindex]);
+  }, [page.path, page.title, page.description, page.noindex, page.image]);
 }

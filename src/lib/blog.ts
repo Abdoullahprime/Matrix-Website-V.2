@@ -82,3 +82,11 @@ export async function fetchPost(slug: string): Promise<PostFull> {
   const data = await readJson<{ post: PostFull }>(await fetch('/api/posts.php?slug=' + encodeURIComponent(slug)));
   return data.post;
 }
+
+/** Browser-tab / search title for a post: keep it near 60 characters (same rule as api/post.php). */
+export function seoTitle(title: string): string {
+  const suffix = ' | Matrix Solutions';
+  if ((title + suffix).length <= 62) return title + suffix;
+  if (title.length <= 62) return title;
+  return title.slice(0, 59).replace(/[\s,.;:-]+$/, '') + '…';
+}

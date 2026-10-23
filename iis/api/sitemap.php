@@ -23,12 +23,15 @@ try {
     $db = mx_db();
     mx_cms_schema($db);
     $res = $db->query(
-        "SELECT slug, COALESCE(updated_at, published_at) AS m FROM posts
+        "SELECT slug, cover_media_id, COALESCE(updated_at, published_at) AS m FROM posts
          WHERE status = 'published' AND published_at <= NOW() ORDER BY published_at DESC LIMIT 5000"
     );
     foreach ($res->fetch_all(MYSQLI_ASSOC) as $r) {
         $loc = htmlspecialchars($base . '/blog/' . $r['slug'], ENT_XML1);
-        $urls[] = '<url><loc>' . $loc . '</loc><lastmod>' . substr((string)$r['m'], 0, 10) . '</lastmod></url>';
+        $img = $r['cover_media_id'] !== null
+            ? '<image:image><image:loc>' . htmlspecialchars($base . '/api/media.php?id=' . (int)$r['cover_media_id'], ENT_XML1) . '</image:loc></image:image>'
+            : '';
+        $urls[] = '<url><loc>' . $loc . '</loc><lastmod>' . substr((string)$r['m'], 0, 10) . '</lastmod>' . $img . '</url>';
     }
 } catch (Throwable $e) {
     error_log('Matrix sitemap: posts skipped (' . mx_failure_reason($e) . ')');
@@ -37,5 +40,5 @@ try {
 header('Content-Type: application/xml; charset=utf-8');
 header('Cache-Control: public, max-age=3600');
 echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n"
-    . '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n  "
+    . '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">' . "\n  "
     . implode("\n  ", $urls) . "\n</urlset>\n";
