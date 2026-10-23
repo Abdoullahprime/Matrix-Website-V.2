@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Link, Route, Routes, useNavigate, useParams } from 'react-router-dom';
+import { Link, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Loader2, LogOut, Plus, Pencil, Trash2, Eye, EyeOff, ExternalLink } from 'lucide-react';
 import usePageMeta from '../../hooks/usePageMeta';
-import { adminApi, AdminPostRow, Session, setCsrf } from './adminApi';
+import { adminApi, AdminPostRow, AdminSolutionRow, Session, setCsrf } from './adminApi';
 import PostEditor from './PostEditor';
 import { formatDate } from '../../lib/blog';
 
@@ -10,13 +10,25 @@ const field =
   'w-full px-4 py-3 rounded-lg border border-slate-200 focus:border-matrix-blue-primary focus:ring-4 focus:ring-matrix-blue-primary/10 outline-none font-medium bg-white';
 
 function Shell({ children, user, onLogout }: { children: React.ReactNode; user?: string; onLogout?: () => void }) {
+  const { pathname } = useLocation();
+  const inSolutions = pathname.startsWith('/admin/solutions');
+  const tab = (active: boolean) =>
+    `px-3 py-1.5 rounded-full text-sm font-bold transition-colors ${active ? 'bg-white text-matrix-navy' : 'text-white/80 hover:text-white hover:bg-white/10'}`;
   return (
     <div className="min-h-screen bg-slate-50">
       <header className="bg-matrix-navy text-white">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link to="/admin" className="font-extrabold tracking-tight">
-            Matrix Admin
-          </Link>
+          <div className="flex items-center gap-6">
+            <Link to="/admin" className="font-extrabold tracking-tight">
+              Matrix Admin
+            </Link>
+            {user && (
+              <nav className="flex items-center gap-2" aria-label="Admin menu">
+                <Link to="/admin" className={tab(!inSolutions)}>Blog</Link>
+                <Link to="/admin/solutions" className={tab(inSolutions)}>Solutions</Link>
+              </nav>
+            )}
+          </div>
           <div className="flex items-center gap-5 text-sm font-bold">
             <Link to="/blog" className="flex items-center gap-1 text-white/80 hover:text-white" target="_blank">
               View blog <ExternalLink size={14} />
@@ -192,6 +204,98 @@ function PostsList() {
   );
 }
 
+function SolutionsList() {
+  const [rows, setRows] = useState<AdminSolutionRow[] | null>(null);
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
+  const load = useCallback(() => {
+    adminApi
+      .listSolutions()
+      .then((r) => setRows(r.pages))
+      .catch((e: Error) => setError(e.message));
+  }, []);
+  useEffect(load, [load]);
+
+  const toggle = async (p: AdminSolutionRow) => {
+    try {
+      await adminApi.setSolutionStatus(p.id, p.status === 'published' ? 'draft' : 'published');
+      load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed.');
+    }
+  };
+  const remove = async (p: AdminSolutionRow) => {
+    if (!window.confirm(`Delete the page “${p.title}”? This cannot be undone.`)) return;
+    try {
+      await adminApi.removeSolution(p.id);
+      load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed.');
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between gap-4">
+        <h1 className="text-3xl font-extrabold text-matrix-navy">Solution pages</h1>
+        <button type="button" className="btn-primary flex items-center gap-2" onClick={() => navigate('/admin/solutions/new')}>
+          <Plus size={18} /> New solution page
+        </button>
+      </div>
+      <p className="text-sm text-slate-600 font-medium max-w-3xl">
+        Write a page for any product on the Solutions page. When it is published, clicking that product opens your page. Products
+        without one keep the quick “Request a Demo” card, or the existing solution page that already covers them.
+      </p>
+      {error && <p className="text-sm font-semibold text-red-600" role="alert">{error}</p>}
+      {!rows ? (
+        <Loader2 className="animate-spin text-slate-400" />
+      ) : rows.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-slate-100 p-12 text-center text-slate-600 font-medium">
+          No solution pages yet. Click “New solution page” to write the first one.
+        </div>
+      ) : (
+        <div className="bg-white rounded-2xl border border-slate-100 divide-y divide-slate-100 overflow-hidden">
+          {rows.map((p) => (
+            <div key={p.id} className="p-5 flex flex-col md:flex-row md:items-center gap-4 justify-between">
+              <div className="min-w-0">
+                <Link to={`/admin/solutions/${p.id}`} className="font-extrabold text-matrix-navy hover:text-matrix-blue-primary break-words">
+                  {p.title}
+                </Link>
+                <div className="mt-1 text-xs font-bold uppercase tracking-widest text-slate-500 flex flex-wrap gap-3">
+                  <span className={p.status === 'published' ? 'text-emerald-600' : 'text-amber-600'}>{p.status}</span>
+                  {p.product && <span>{p.product}</span>}
+                  <span>/solutions/{p.slug}</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                {p.status === 'published' && (
+                  <Link to={`/solutions/${p.slug}`} target="_blank" className="p-2 rounded-lg hover:bg-slate-100 text-slate-600" title="View on site">
+                    <ExternalLink size={18} />
+                  </Link>
+                )}
+                <button type="button" onClick={() => toggle(p)} className="p-2 rounded-lg hover:bg-slate-100 text-slate-600" title={p.status === 'published' ? 'Unpublish' : 'Publish'}>
+                  {p.status === 'published' ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+                <Link to={`/admin/solutions/${p.id}`} className="p-2 rounded-lg hover:bg-slate-100 text-slate-600" title="Edit">
+                  <Pencil size={18} />
+                </Link>
+                <button type="button" onClick={() => remove(p)} className="p-2 rounded-lg hover:bg-red-50 text-red-600" title="Delete">
+                  <Trash2 size={18} />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SolutionEditRoute() {
+  const { id } = useParams();
+  return <PostEditor kind="solution" postId={id && id !== 'new' ? Number(id) : null} />;
+}
+
 function EditRoute() {
   const { id } = useParams();
   return <PostEditor postId={id && id !== 'new' ? Number(id) : null} />;
@@ -248,6 +352,8 @@ export default function AdminApp() {
       <Routes>
         <Route index element={<PostsList />} />
         <Route path="posts/:id" element={<EditRoute />} />
+        <Route path="solutions" element={<SolutionsList />} />
+        <Route path="solutions/:id" element={<SolutionEditRoute />} />
         <Route path="*" element={<PostsList />} />
       </Routes>
     </Shell>

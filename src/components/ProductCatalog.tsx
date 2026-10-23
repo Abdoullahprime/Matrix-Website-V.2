@@ -1,84 +1,30 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import {
-  Server, Shield, Database, Globe, Cpu,
-  Calculator, Users, Wallet, ShoppingCart,
-  BarChart3, FileText, Truck, HelpCircle, Landmark,
-  CreditCard, Smartphone, ShieldCheck, Hotel, Monitor,
-  Wifi, Settings, Battery, HardDrive, Lock, Search, Info, X
-} from 'lucide-react';
-
-const productCategories = [
-  {
-    title: "Core Enterprise Products",
-    icon: <Database className="text-matrix-blue-primary" />,
-    items: [
-      { name: "Accounting Management System", icon: <Calculator size={18} />, desc: "Comprehensive financial tracking, general ledger, and automated reporting for enterprise-level fiscal management." },
-      { name: "Fixed Assets Management System", icon: <HardDrive size={18} />, desc: "Track, manage, and depreciate physical assets across multiple locations with full audit trails." },
-      { name: "Human Resources Management System", icon: <Users size={18} />, desc: "Centralized employee records, performance tracking, and organizational mapping for modern workforces." },
-      { name: "Payroll Management System", icon: <Wallet size={18} />, desc: "Automated salary processing, tax compliance, and benefit management with localized regulatory support." },
-      { name: "Online Recruitment Management System", icon: <Search size={18} />, desc: "End-to-end applicant tracking, from job posting to onboarding, streamlining the hiring lifecycle." },
-      { name: "Procurement System", icon: <ShoppingCart size={18} />, desc: "Manage vendor relationships, purchase orders, and inventory requests with multi-level approval workflows." },
-      { name: "Stock Management System", icon: <BarChart3 size={18} />, desc: "Real-time inventory tracking, reorder alerts, and warehouse management for optimized supply chains." },
-      { name: "Property Tax Management System", icon: <FileText size={18} />, desc: "Automated billing, collection, and reporting for municipal property taxes and land rates." },
-      { name: "Loan Management System", icon: <CreditCard size={18} />, desc: "Complete lifecycle management for credit products, from application and scoring to disbursement and recovery." },
-      { name: "Sales Management System", icon: <BarChart3 size={18} />, desc: "Track leads, manage pipelines, and analyze sales performance with integrated CRM capabilities." },
-      { name: "Petty Cash System", icon: <Wallet size={18} />, desc: "Secure management of small-scale expenditures with digital receipts and automated reconciliation." },
-      { name: "Vehicle Management System", icon: <Truck size={18} />, desc: "Fleet tracking, maintenance scheduling, and fuel consumption monitoring for corporate logistics." },
-      { name: "Help Desk System", icon: <HelpCircle size={18} />, desc: "Internal and external support ticketing with SLA tracking and knowledge base integration." }
-    ]
-  },
-  {
-    title: "Banking & Financial Systems",
-    icon: <Globe className="text-matrix-blue-primary" />,
-    items: [
-      { name: "Central Bank Compliance Reporting Interface System", icon: <ShieldCheck size={18} />, desc: "Automated data extraction and formatting for regulatory reporting to central banking authorities." },
-      { name: "T-Bills Management System", icon: <Landmark size={18} />, desc: "Management of treasury bills, government bonds, and other fixed-income securities for financial institutions." },
-      { name: "Internet Banking System", icon: <Smartphone size={18} />, desc: "Secure, feature-rich digital banking platform for retail and corporate customers." },
-      { name: "Domestic Money Transfer System", icon: <CreditCard size={18} />, desc: "Real-time local remittance and settlement platform with multi-channel support." },
-      { name: "Insurance Management System", icon: <Shield size={18} />, desc: "Policy administration, claims processing, and agent management for general and life insurance." },
-      { name: "Micro Banker System for Micro Finance", icon: <Landmark size={18} />, desc: "Tailored core banking for MFIs, supporting group lending and specialized savings products." },
-      { name: "Micro Banker System for Credit Union", icon: <Users size={18} />, desc: "Member-centric banking platform optimized for credit unions and cooperatives." },
-      { name: "Micro Banker System for Islamic Micro Finance", icon: <Landmark size={18} />, desc: "Sharia-compliant financial management supporting Murabaha, Musharaka, and other Islamic modes." },
-      { name: "Receipt System", icon: <FileText size={18} />, desc: "Digital and physical receipt generation with integrated payment gateway support." }
-    ]
-  },
-  {
-    title: "Specialized Solutions",
-    icon: <Cpu className="text-matrix-blue-primary" />,
-    items: [
-      { name: "Hotel Front Office & Reservation System", icon: <Hotel size={18} />, desc: "Real-time room booking, guest check-in/out, and billing for hospitality management." },
-      { name: "Hotel & Restaurant Management System", icon: <Hotel size={18} />, desc: "Integrated POS and back-office management for full-service hospitality establishments." },
-      { name: "Banking Application", icon: <Smartphone size={18} />, desc: "Custom mobile and desktop applications for specialized banking workflows." },
-      { name: "Software Development", icon: <Settings size={18} />, desc: "Bespoke software engineering tailored to unique institutional requirements." },
-      { name: "Hardware Sales and Maintenance", icon: <Monitor size={18} />, desc: "Procurement and support for enterprise-grade servers, workstations, and peripherals." },
-      { name: "Network Connectivity Solutions", icon: <Wifi size={18} />, desc: "Design and implementation of secure LAN/WAN and fiber-optic infrastructures." },
-      { name: "Managed Services", icon: <Settings size={18} />, desc: "Outsourced IT operations management with 24/7 technical oversight." },
-      { name: "Website Development and Hosting", icon: <Globe size={18} />, desc: "Professional web presence design with high-availability hosting solutions." },
-      { name: "Power Backup System", icon: <Battery size={18} />, desc: "Industrial-grade UPS and solar backup solutions for uninterrupted operations." }
-    ]
-  },
-  {
-    title: "IT Services",
-    icon: <Server className="text-matrix-blue-primary" />,
-    items: [
-      { name: "Backup and Disaster Recovery", icon: <Database size={18} />, desc: "Automated off-site backups and business continuity planning for data resilience." },
-      { name: "Hosting & Colocations Services", icon: <Server size={18} />, desc: "Secure data center space and cloud hosting for mission-critical applications." },
-      { name: "24/7 Infrastructure Monitoring", icon: <Monitor size={18} />, desc: "Proactive health tracking of servers, networks, and services with instant alerting." },
-      { name: "Servers, Storage, Database, Cloud and Service Desk", icon: <HardDrive size={18} />, desc: "Comprehensive IT infrastructure management and support desk services." },
-      { name: "24/7 Alert Monitoring & Threat Advisory", icon: <Shield size={18} />, desc: "Continuous security surveillance and real-time intelligence on emerging threats." },
-      { name: "Firewall & Endpoint Security Management", icon: <Lock size={18} />, desc: "Management of network perimeters and device security to prevent unauthorized access." },
-      { name: "Identity and Access Management", icon: <Users size={18} />, desc: "Secure user authentication and role-based access control across all systems." },
-      { name: "Security Gap Assessment", icon: <ShieldCheck size={18} />, desc: "Comprehensive auditing of security posture to identify and remediate vulnerabilities." },
-      { name: "Vulnerability Assessment (VA) & Penetration testing (PT)", icon: <ShieldCheck size={18} />, desc: "Rigorous testing of system defenses to ensure robustness against cyber attacks." }
-    ]
-  }
-];
+import { Info, X } from 'lucide-react';
+import { fixedSolutionSlug, productCategories, productSlug } from '../data/products';
 
 export default function ProductCatalog() {
   const navigate = useNavigate();
   const [selectedProduct, setSelectedProduct] = useState<{name: string, desc: string} | null>(null);
+  // Products that have their own page written in the admin area (a failed load just means none).
+  const [ownPages, setOwnPages] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    fetch('/api/solutions.php')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => d && setOwnPages(new Set((d.pages as { slug: string }[]).map((p) => p.slug))))
+      .catch(() => undefined);
+  }, []);
+
+  // A product opens its own page if it has one, else the fixed solution page that covers it,
+  // else the quick "Request a Demo" card.
+  const openProduct = (item: { name: string; desc: string }) => {
+    const own = productSlug(item.name);
+    if (ownPages.has(own)) return navigate(`/solutions/${own}`);
+    const fixed = fixedSolutionSlug(item.name);
+    if (fixed) return navigate(`/solutions/${fixed}`);
+    setSelectedProduct(item);
+  };
 
   return (
     <section className="relative bg-slate-50 pb-48 overflow-hidden">
@@ -124,7 +70,7 @@ export default function ProductCatalog() {
                 {category.items.map((item, i) => (
                   <motion.button
                     key={i}
-                    onClick={() => setSelectedProduct(item)}
+                    onClick={() => openProduct(item)}
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}

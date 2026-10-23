@@ -4,6 +4,7 @@ import { ArrowDown, ArrowUp, Heading2, Image as ImageIcon, List, Loader2, Quote,
 import BlogBlocks from '../../components/BlogBlocks';
 import { Block, ImageSize } from '../../lib/blog';
 import { adminApi, EditablePost, prepareImage } from './adminApi';
+import { productCategories, productSlug } from '../../data/products';
 
 const field =
   'w-full px-4 py-3 rounded-lg border border-slate-200 focus:border-matrix-blue-primary focus:ring-4 focus:ring-matrix-blue-primary/10 outline-none font-medium bg-white';
@@ -78,8 +79,10 @@ function ImagePicker({ onPicked }: { onPicked: (id: number, url: string) => void
   );
 }
 
-export default function PostEditor({ postId }: { postId: number | null }) {
+export default function PostEditor({ postId, kind = 'post' }: { postId: number | null; kind?: 'post' | 'solution' }) {
   const navigate = useNavigate();
+  const isSolution = kind === 'solution';
+  const basePath = isSolution ? '/admin/solutions' : '/admin';
   const [post, setPost] = useState<EditablePost>(blank());
   const [loading, setLoading] = useState(postId !== null);
   const [saving, setSaving] = useState(false);
@@ -89,8 +92,7 @@ export default function PostEditor({ postId }: { postId: number | null }) {
 
   useEffect(() => {
     if (postId === null) return;
-    adminApi
-      .get(postId)
+    (isSolution ? adminApi.getSolution(postId) : adminApi.get(postId))
       .then((r) => {
         // The server keeps only the video id; rebuild a link so the field is filled and re-saves.
         const blocks = r.post.blocks.map((b) =>
@@ -121,11 +123,11 @@ export default function PostEditor({ postId }: { postId: number | null }) {
     setSaving(true);
     setMessage(null);
     try {
-      const r = await adminApi.save({ ...post, status });
+      const r = await (isSolution ? adminApi.saveSolution({ ...post, status }) : adminApi.save({ ...post, status }));
       setPost((p) => ({ ...p, id: r.id, slug: r.slug, status }));
       setSlugTouched(true);
       setMessage({ kind: 'ok', text: status === 'published' ? 'Published.' : 'Saved as draft.' });
-      if (postId === null) navigate(`/admin/posts/${r.id}`, { replace: true });
+      if (postId === null) navigate(isSolution ? `/admin/solutions/${r.id}` : `/admin/posts/${r.id}`, { replace: true });
     } catch (e) {
       setMessage({ kind: 'error', text: e instanceof Error ? e.message : 'Could not save.' });
     } finally {
@@ -148,10 +150,10 @@ export default function PostEditor({ postId }: { postId: number | null }) {
     <div className="space-y-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <Link to="/admin" className="text-sm font-bold text-matrix-blue-primary hover:underline">
-            ← All posts
+          <Link to={basePath} className="text-sm font-bold text-matrix-blue-primary hover:underline">
+            ← {isSolution ? 'All solution pages' : 'All posts'}
           </Link>
-          <h1 className="text-3xl font-extrabold text-matrix-navy mt-1">{postId === null && !post.id ? 'New post' : 'Edit post'}</h1>
+          <h1 className="text-3xl font-extrabold text-matrix-navy mt-1">{postId === null && !post.id ? (isSolution ? 'New solution page' : 'New post') : (isSolution ? 'Edit solution page' : 'Edit post')}</h1>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <button type="button" onClick={() => setPreview((v) => !v)} className="btn-secondary !py-2.5 !px-5 text-sm">
@@ -209,6 +211,36 @@ export default function PostEditor({ postId }: { postId: number | null }) {
                 placeholder="A clear, specific title"
               />
             </div>
+            {isSolution && (
+              <div>
+                <label className={label} htmlFor="p-product">Product on the Solutions page</label>
+                <select
+                  id="p-product"
+                  className={field}
+                  value={post.product ?? ''}
+                  onChange={(e) => {
+                    const name = e.target.value;
+                    setPost((p) => ({
+                      ...p,
+                      product: name,
+                      title: p.title || name,
+                      slug: slugTouched ? p.slug : name ? productSlug(name) : '',
+                    }));
+                  }}
+                >
+                  <option value="">Choose the product this page is for…</option>
+                  {productCategories.map((c) => (
+                    <optgroup key={c.title} label={c.title}>
+                      {c.items.map((i) => (
+                        <option key={i.name} value={i.name}>{i.name}</option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
+                <p className="mt-2 text-xs text-slate-500 font-medium">Once published, clicking this product on the Solutions page opens this page. The web address is made from the product name.</p>
+              </div>
+            )}
+            {!isSolution && (
             <div className="grid md:grid-cols-2 gap-6">
               <div>
                 <label className={label} htmlFor="p-cat">Topic (category)</label>
@@ -219,8 +251,9 @@ export default function PostEditor({ postId }: { postId: number | null }) {
                 <input id="p-author" className={field} value={post.author} maxLength={80} onChange={(e) => set('author', e.target.value)} placeholder="Name shown on the post" />
               </div>
             </div>
+            )}
             <div>
-              <label className={label} htmlFor="p-excerpt">Short summary (shown on the blog page and in search results)</label>
+              <label className={label} htmlFor="p-excerpt">{isSolution ? 'Short summary (shown under the title and in search results)' : 'Short summary (shown on the blog page and in search results)'}</label>
               <textarea id="p-excerpt" className={`${field} resize-none`} rows={3} maxLength={400} value={post.excerpt} onChange={(e) => set('excerpt', e.target.value)} />
             </div>
             <div className="grid md:grid-cols-2 gap-6">
@@ -238,6 +271,7 @@ export default function PostEditor({ postId }: { postId: number | null }) {
                   placeholder="made from the title if left empty"
                 />
               </div>
+              {!isSolution && (
               <div>
                 <label className={label} htmlFor="p-date">Publish date (optional)</label>
                 <input
@@ -248,12 +282,13 @@ export default function PostEditor({ postId }: { postId: number | null }) {
                   onChange={(e) => set('publishedAt', e.target.value || null)}
                 />
               </div>
+              )}
             </div>
           </section>
 
           <section className="bg-white rounded-2xl border border-slate-100 p-6 md:p-8 space-y-4">
             <h2 className="text-lg font-extrabold text-matrix-navy">Header image</h2>
-            <p className="text-sm text-slate-600 font-medium">Shown large at the top of the post and on its card in the blog. Leave empty for a post without one.</p>
+            <p className="text-sm text-slate-600 font-medium">{isSolution ? 'Shown large below the title. Leave empty for none.' : 'Shown large at the top of the post and on its card in the blog. Leave empty for a post without one.'}</p>
             {post.coverUrl && (
               <div className="relative max-w-md">
                 <img src={post.coverUrl} alt="" className="w-full rounded-xl border border-slate-100" />
@@ -277,8 +312,8 @@ export default function PostEditor({ postId }: { postId: number | null }) {
           </section>
 
           <section className="bg-white rounded-2xl border border-slate-100 p-6 md:p-8 space-y-4">
-            <h2 className="text-lg font-extrabold text-matrix-navy">Key points (optional)</h2>
-            <p className="text-sm text-slate-600 font-medium">A short “In this article” box under the header. One point per line.</p>
+            <h2 className="text-lg font-extrabold text-matrix-navy">{isSolution ? 'Key features (optional)' : 'Key points (optional)'}</h2>
+            <p className="text-sm text-slate-600 font-medium">{isSolution ? 'Shown as a feature list near the top of the page. One feature per line.' : 'A short “In this article” box under the header. One point per line.'}</p>
             <textarea
               className={`${field} resize-y`}
               rows={4}
@@ -288,7 +323,7 @@ export default function PostEditor({ postId }: { postId: number | null }) {
           </section>
 
           <section className="space-y-4">
-            <h2 className="text-lg font-extrabold text-matrix-navy">Post content</h2>
+            <h2 className="text-lg font-extrabold text-matrix-navy">{isSolution ? 'Page content' : 'Post content'}</h2>
             {post.blocks.length === 0 && (
               <p className="text-slate-600 font-medium bg-white rounded-2xl border border-dashed border-slate-300 p-8 text-center">
                 Nothing here yet. Add paragraphs, headings and pictures below, in the order they should appear.

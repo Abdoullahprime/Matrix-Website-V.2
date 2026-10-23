@@ -187,6 +187,13 @@ token on every change, a same-site check, and a lock after repeated wrong passwo
 address or 6 per username in 15 minutes). Posts hold plain text only, never HTML. `/admin` is
 excluded in `robots.txt` and marked `noindex`.
 
+**Solution pages (admin menu: Solutions):** write a detail page for any product on the Solutions
+page (same block editor, plus a product picker and a key-features list). Once published, clicking
+that product opens `/solutions/<product-name>`. A product without its own page opens the existing
+fixed solution page that already covers it (HR & Payroll, Accounting, Banking, IT), and a product
+with neither keeps the quick "Request a Demo" card. Stored in the `solution_pages` table; each page
+gets its own HTML head through `api/solution.php`, the same way blog posts do.
+
 `/sitemap.xml` is generated live by `api/sitemap.php` (fixed pages plus published posts).
 
 ## Reading submissions

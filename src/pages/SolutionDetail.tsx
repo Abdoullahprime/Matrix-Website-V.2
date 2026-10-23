@@ -10,7 +10,7 @@ import { clientDisplayName } from '../data/clients';
 import Breadcrumbs from '../components/Breadcrumbs';
 import FaqSection from '../components/FaqSection';
 import SectionLabel from '../components/SectionLabel';
-import NotFound from './NotFound';
+import ProductSolutionPage from './ProductSolutionPage';
 
 function ClientCard({ name }: { name: string }) {
   const display = clientDisplayName(name);
@@ -31,17 +31,17 @@ function ClientCard({ name }: { name: string }) {
   );
 }
 
+type FixedPage = (typeof solutionPages)[number];
+
+/** /solutions/<slug>: one of the four fixed pages, else a product page written in the admin area. */
 export default function SolutionDetail() {
-  const { slug } = useParams();
+  const { slug = '' } = useParams();
   const page = solutionPages.find((s) => s.slug === slug);
+  return page ? <FixedSolution page={page} /> : <ProductSolutionPage slug={slug} />;
+}
 
-  usePageMeta(
-    page
-      ? getPageMeta(solutionPath(page.slug))
-      : { path: '/404', title: 'Page not found | Matrix Solutions', description: 'This page does not exist.', noindex: true }
-  );
-
-  if (!page) return <NotFound />;
+function FixedSolution({ page }: { page: FixedPage }) {
+  usePageMeta(getPageMeta(solutionPath(page.slug)));
 
   const related = page.related
     .map((s) => solutionPages.find((p) => p.slug === s))

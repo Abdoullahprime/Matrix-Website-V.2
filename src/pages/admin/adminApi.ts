@@ -11,8 +11,19 @@ export interface AdminPostRow {
   cover_media_id: number | null;
 }
 
+export interface AdminSolutionRow {
+  id: number;
+  slug: string;
+  product: string;
+  title: string;
+  status: 'draft' | 'published';
+  updated_at: string;
+}
+
 export interface EditablePost {
   id?: number;
+  /** Solution pages only: the product on the Solutions page this page belongs to. */
+  product?: string;
   slug: string;
   title: string;
   excerpt: string;
@@ -66,6 +77,11 @@ export const adminApi = {
   save: (p: EditablePost) => post<{ id: number; slug: string }>('/api/admin/posts.php', { action: 'save', ...p }),
   remove: (id: number) => post<{ ok: true }>('/api/admin/posts.php', { action: 'delete', id }),
   setStatus: (id: number, status: 'draft' | 'published') => post<{ ok: true }>('/api/admin/posts.php', { action: 'publish', id, status }),
+  listSolutions: () => post<{ pages: AdminSolutionRow[] }>('/api/admin/solutions.php', { action: 'list' }),
+  getSolution: async (id: number) => ({ post: (await post<{ page: EditablePost }>('/api/admin/solutions.php', { action: 'get', id })).page }),
+  saveSolution: (p: EditablePost) => post<{ id: number; slug: string }>('/api/admin/solutions.php', { action: 'save', ...p }),
+  removeSolution: (id: number) => post<{ ok: true }>('/api/admin/solutions.php', { action: 'delete', id }),
+  setSolutionStatus: (id: number, status: 'draft' | 'published') => post<{ ok: true }>('/api/admin/solutions.php', { action: 'publish', id, status }),
   upload: (dataUrl: string) => post<{ id: number; url: string }>('/api/admin/media.php', { dataUrl }),
 };
 

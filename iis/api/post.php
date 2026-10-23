@@ -18,31 +18,6 @@ if ($html === '') {
 header('Content-Type: text/html; charset=utf-8');
 header('Cache-Control: public, max-age=60');
 
-function esc(string $s): string
-{
-    return htmlspecialchars($s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-}
-
-/** Same rule as seoTitle() in src/lib/blog.ts: keep the whole title near 60 characters. */
-function seo_title(string $title): string
-{
-    $suffix = ' | Matrix Solutions';
-    if (mx_len($title . $suffix) <= 62) {
-        return $title . $suffix;
-    }
-    if (mx_len($title) <= 62) {
-        return $title;
-    }
-    $cut = function_exists('mb_substr') ? mb_substr($title, 0, 59, 'UTF-8') : substr($title, 0, 59);
-    return rtrim($cut, " ,.;:-") . '…';
-}
-
-/** Replace the first match of a tag pattern with $new (no-op if it is not there). */
-function swap(string $html, string $pattern, string $new): string
-{
-    return preg_replace($pattern, str_replace(['\\', '$'], ['\\\\', '\\$'], $new), $html, 1) ?? $html;
-}
-
 $post = null;
 try {
     $db = mx_db();
@@ -64,7 +39,7 @@ try {
 
 if (!$found) {
     http_response_code(404);
-    echo swap($html, '~<meta name="robots"[^>]*>~', '<meta name="robots" content="noindex, follow" />');
+    echo mx_swap($html, '~<meta name="robots"[^>]*>~', '<meta name="robots" content="noindex, follow" />');
     exit;
 }
 
@@ -73,7 +48,7 @@ if (preg_match('~<link rel="canonical" href="(https?://[^/"]+)~', $html, $m)) {
     $base = $m[1];
 }
 $url = $base . '/blog/' . $slug;
-$title = seo_title((string)$post['title']);
+$title = mx_seo_title((string)$post['title']);
 $blocks = json_decode((string)$post['blocks'], true) ?: [];
 $desc = trim((string)$post['excerpt']);
 if ($desc === '') {
@@ -94,22 +69,22 @@ $alt = $post['cover_alt'] !== '' ? (string)$post['cover_alt'] : (string)$post['t
 $published = gmdate('c', strtotime((string)$post['published_at'] . ' UTC'));
 $modified = gmdate('c', strtotime((string)$post['updated_at'] . ' UTC'));
 
-$html = swap($html, '~<title>.*?</title>~s', '<title>' . esc($title) . '</title>');
-$html = swap($html, '~<meta name="description"[^>]*>~', '<meta name="description" content="' . esc($desc) . '" />');
-$html = swap($html, '~<link rel="canonical"[^>]*>~', '<link rel="canonical" href="' . esc($url) . '" />');
-$html = swap($html, '~<meta property="og:type"[^>]*>~', '<meta property="og:type" content="article" />');
-$html = swap($html, '~<meta property="og:title"[^>]*>~', '<meta property="og:title" content="' . esc($title) . '" />');
-$html = swap($html, '~<meta property="og:description"[^>]*>~', '<meta property="og:description" content="' . esc($desc) . '" />');
-$html = swap($html, '~<meta property="og:url"[^>]*>~', '<meta property="og:url" content="' . esc($url) . '" />');
-$html = swap($html, '~<meta property="og:image"[^>]*>~', '<meta property="og:image" content="' . esc($cover) . '" />');
-$html = swap($html, '~<meta property="og:image:alt"[^>]*>~', '<meta property="og:image:alt" content="' . esc($alt) . '" />');
+$html = mx_swap($html, '~<title>.*?</title>~s', '<title>' . mx_esc($title) . '</title>');
+$html = mx_swap($html, '~<meta name="description"[^>]*>~', '<meta name="description" content="' . mx_esc($desc) . '" />');
+$html = mx_swap($html, '~<link rel="canonical"[^>]*>~', '<link rel="canonical" href="' . mx_esc($url) . '" />');
+$html = mx_swap($html, '~<meta property="og:type"[^>]*>~', '<meta property="og:type" content="article" />');
+$html = mx_swap($html, '~<meta property="og:title"[^>]*>~', '<meta property="og:title" content="' . mx_esc($title) . '" />');
+$html = mx_swap($html, '~<meta property="og:description"[^>]*>~', '<meta property="og:description" content="' . mx_esc($desc) . '" />');
+$html = mx_swap($html, '~<meta property="og:url"[^>]*>~', '<meta property="og:url" content="' . mx_esc($url) . '" />');
+$html = mx_swap($html, '~<meta property="og:image"[^>]*>~', '<meta property="og:image" content="' . mx_esc($cover) . '" />');
+$html = mx_swap($html, '~<meta property="og:image:alt"[^>]*>~', '<meta property="og:image:alt" content="' . mx_esc($alt) . '" />');
 if ($hasCover) {
     // The cover's real size is not 1200x630, so do not claim it.
     $html = preg_replace('~\s*<meta property="og:image:(width|height)"[^>]*>~', '', $html) ?? $html;
 }
-$html = swap($html, '~<meta name="twitter:title"[^>]*>~', '<meta name="twitter:title" content="' . esc($title) . '" />');
-$html = swap($html, '~<meta name="twitter:description"[^>]*>~', '<meta name="twitter:description" content="' . esc($desc) . '" />');
-$html = swap($html, '~<meta name="twitter:image"[^>]*>~', '<meta name="twitter:image" content="' . esc($cover) . '" />');
+$html = mx_swap($html, '~<meta name="twitter:title"[^>]*>~', '<meta name="twitter:title" content="' . mx_esc($title) . '" />');
+$html = mx_swap($html, '~<meta name="twitter:description"[^>]*>~', '<meta name="twitter:description" content="' . mx_esc($desc) . '" />');
+$html = mx_swap($html, '~<meta name="twitter:image"[^>]*>~', '<meta name="twitter:image" content="' . mx_esc($cover) . '" />');
 
 $ld = [
     '@context' => 'https://schema.org',
@@ -145,19 +120,19 @@ $json = str_replace('</', '<\\/', json_encode($ld, JSON_UNESCAPED_UNICODE | JSON
 $html = str_replace('</head>', '    <script type="application/ld+json">' . $json . "</script>\n  </head>", $html);
 
 // Readable text for crawlers that do not run scripts.
-$body = '<h1>' . esc((string)$post['title']) . '</h1>';
+$body = '<h1>' . mx_esc((string)$post['title']) . '</h1>';
 foreach ($blocks as $b) {
     $t = $b['type'] ?? '';
     if ($t === 'heading') {
-        $body .= '<h2>' . esc((string)$b['text']) . '</h2>';
+        $body .= '<h2>' . mx_esc((string)$b['text']) . '</h2>';
     } elseif ($t === 'paragraph') {
-        $body .= '<p>' . esc((string)$b['text']) . '</p>';
+        $body .= '<p>' . mx_esc((string)$b['text']) . '</p>';
     } elseif ($t === 'list') {
-        $body .= '<ul>' . implode('', array_map(static fn($i) => '<li>' . esc((string)$i) . '</li>', $b['items'] ?? [])) . '</ul>';
+        $body .= '<ul>' . implode('', array_map(static fn($i) => '<li>' . mx_esc((string)$i) . '</li>', $b['items'] ?? [])) . '</ul>';
     } elseif ($t === 'quote') {
-        $body .= '<blockquote>' . esc((string)$b['text']) . '</blockquote>';
+        $body .= '<blockquote>' . mx_esc((string)$b['text']) . '</blockquote>';
     }
 }
-$html = swap($html, '~<noscript>.*?</noscript>~s', '<noscript><main>' . $body . '</main></noscript>');
+$html = mx_swap($html, '~<noscript>.*?</noscript>~s', '<noscript><main>' . $body . '</main></noscript>');
 
 echo $html;

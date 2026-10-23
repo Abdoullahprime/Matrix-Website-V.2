@@ -79,6 +79,24 @@ function mx_cms_schema(mysqli $db): void
             INDEX idx_status_pub (status, published_at)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
     );
+    // Detail pages for the products on the Solutions page (written in the admin area).
+    $db->query(
+        "CREATE TABLE IF NOT EXISTS solution_pages (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            slug VARCHAR(160) NOT NULL UNIQUE,
+            product VARCHAR(200) NOT NULL DEFAULT '',
+            title VARCHAR(200) NOT NULL,
+            excerpt VARCHAR(400) NOT NULL DEFAULT '',
+            cover_media_id INT NULL,
+            cover_alt VARCHAR(300) NOT NULL DEFAULT '',
+            highlights TEXT NOT NULL,
+            blocks LONGTEXT NOT NULL,
+            search_text LONGTEXT NOT NULL,
+            status VARCHAR(10) NOT NULL DEFAULT 'draft',
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
+    );
     $done = true;
 }
 
@@ -220,21 +238,26 @@ function mx_slugify(string $text): string
     return substr($t, 0, 120);
 }
 
-function mx_unique_slug(mysqli $db, string $wanted, int $excludeId): string
+function mx_unique_slug(mysqli $db, string $wanted, int $excludeId, string $table = 'posts'): string
 {
     $base = mx_slugify($wanted);
     if ($base === '') {
         $base = 'post';
     }
+    if (!in_array($table, ['posts', 'solution_pages'], true)) {
+        throw new InvalidArgumentException('table');
+    }
+    // These addresses already belong to the fixed solution pages.
+    $reserved = ['hr-payroll-software-gambia', 'accounting-software-gambia', 'core-banking-microfinance-software-gambia', 'it-infrastructure-cyber-security-gambia'];
     $slug = $base;
     for ($i = 2; $i < 200; $i++) {
-        $stmt = $db->prepare('SELECT COUNT(*) FROM posts WHERE slug = ? AND id <> ?');
+        $stmt = $db->prepare("SELECT COUNT(*) FROM $table WHERE slug = ? AND id <> ?");
         $stmt->bind_param('si', $slug, $excludeId);
         $stmt->execute();
         $stmt->bind_result($n);
         $stmt->fetch();
         $stmt->close();
-        if ((int)$n === 0) {
+        if ((int)$n === 0 && !($table === 'solution_pages' && in_array($slug, $reserved, true))) {
             return $slug;
         }
         $slug = $base . '-' . $i;
@@ -371,4 +394,33 @@ function mx_decode_highlights(string $raw): array
 {
     $d = json_decode($raw, true);
     return is_array($d) ? array_values(array_filter($d, 'is_string')) : [];
+}
+
+// ---------------------------------------------------------------------------------------
+// Helpers for pages that fill the site's index.html with their own head (post.php, solution.php)
+// ---------------------------------------------------------------------------------------
+
+function mx_esc(string $s): string
+{
+    return htmlspecialchars($s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+}
+
+/** Same rule as seoTitle() in src/lib/blog.ts: keep the whole title near 60 characters. */
+function mx_seo_title(string $title): string
+{
+    $suffix = ' | Matrix Solutions';
+    if (mx_len($title . $suffix) <= 62) {
+        return $title . $suffix;
+    }
+    if (mx_len($title) <= 62) {
+        return $title;
+    }
+    $cut = function_exists('mb_substr') ? mb_substr($title, 0, 59, 'UTF-8') : substr($title, 0, 59);
+    return rtrim($cut, " ,.;:-") . '…';
+}
+
+/** Replace the first match of a tag pattern with $new (no-op if it is not there). */
+function mx_swap(string $html, string $pattern, string $new): string
+{
+    return preg_replace($pattern, str_replace(['\\', '$'], ['\\\\', '\\$'], $new), $html, 1) ?? $html;
 }

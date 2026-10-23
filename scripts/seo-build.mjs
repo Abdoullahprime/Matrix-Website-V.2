@@ -145,7 +145,7 @@ ${pages.map((p) => `  <url><loc>${url(p.path)}</loc></url>`).join('\n')}
 // The page list goes to sitemap-pages.xml; the live /sitemap.xml is made by api/sitemap.php,
 // which adds every published blog post (see the Sitemap rule in the web.config below).
 fs.writeFileSync(path.join(dist, 'sitemap-pages.xml'), sitemap);
-fs.writeFileSync(path.join(dist, 'robots.txt'), `User-agent: *\nAllow: /\nAllow: /api/posts.php\nAllow: /api/media.php\nAllow: /api/sitemap.php\nDisallow: /api/\nDisallow: /admin\n\nSitemap: ${SITE}/sitemap.xml\n`);
+fs.writeFileSync(path.join(dist, 'robots.txt'), `User-agent: *\nAllow: /\nAllow: /api/posts.php\nAllow: /api/solutions.php\nAllow: /api/media.php\nAllow: /api/sitemap.php\nDisallow: /api/\nDisallow: /admin\n\nSitemap: ${SITE}/sitemap.xml\n`);
 
 // ---- web.config: serve each page's own HTML file --------------------------------------------
 const tplPath = path.join(root, 'iis', 'web.config');
@@ -168,7 +168,12 @@ const postRule = `        <rule name="Blog post" stopProcessing="true">
           <match url="^blog/([a-z0-9-]+)/?$" />
           <action type="Rewrite" url="/api/post.php?slug={R:1}" appendQueryString="false" />
         </rule>`;
-const rules = sitemapRule + '\n' + postRule + '\n' + pageRules;
+// Product pages written in the admin area. The fixed solution pages above match first.
+const solutionRule = `        <rule name="Solution product page" stopProcessing="true">
+          <match url="^solutions/([a-z0-9-]+)/?$" />
+          <action type="Rewrite" url="/api/solution.php?slug={R:1}" appendQueryString="false" />
+        </rule>`;
+const rules = sitemapRule + '\n' + postRule + '\n' + pageRules + '\n' + solutionRule;
 fs.writeFileSync(path.join(dist, 'web.config'), tpl.replace(marker, rules));
 
 // ---- report ------------------------------------------------------------------------------------

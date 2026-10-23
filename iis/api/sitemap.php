@@ -37,6 +37,15 @@ try {
     error_log('Matrix sitemap: posts skipped (' . mx_failure_reason($e) . ')');
 }
 
+try {
+    $res = $db->query("SELECT slug, updated_at FROM solution_pages WHERE status = 'published' ORDER BY slug");
+    foreach ($res->fetch_all(MYSQLI_ASSOC) as $r) {
+        $urls[] = '<url><loc>' . htmlspecialchars($base . '/solutions/' . $r['slug'], ENT_XML1) . '</loc><lastmod>' . substr((string)$r['updated_at'], 0, 10) . '</lastmod></url>';
+    }
+} catch (Throwable $e) {
+    error_log('Matrix sitemap: solution pages skipped');
+}
+
 header('Content-Type: application/xml; charset=utf-8');
 header('Cache-Control: public, max-age=3600');
 echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n"
