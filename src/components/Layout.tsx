@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, Link, Outlet } from 'react-router-dom';
-import { Menu, X, Globe, Mail, Phone, MapPin, Linkedin, Twitter } from 'lucide-react';
+import { Menu, X, Globe, Mail, Phone, MapPin, Linkedin, Instagram } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 import Logo from './Logo';
@@ -124,11 +124,11 @@ export default function Layout() {
                 Empowering West Africa's digital transformation through secure, scalable, and compliant enterprise software since 2007.
               </p>
               <div className="flex gap-4">
-                <a href="https://www.linkedin.com/" target="_blank" rel="noreferrer" aria-label="Matrix Solutions on LinkedIn" className="w-10 h-10 rounded-full border border-slate-700 flex items-center justify-center hover:bg-matrix-blue-primary hover:border-matrix-blue-primary transition-all">
+                <a href="https://www.linkedin.com/company/matrix-solutions-company-limited/" target="_blank" rel="noreferrer" aria-label="Matrix Solutions on LinkedIn" className="w-10 h-10 rounded-full border border-slate-700 flex items-center justify-center hover:bg-matrix-blue-primary hover:border-matrix-blue-primary transition-all">
                   <Linkedin size={18} />
                 </a>
-                <a href="https://x.com/" target="_blank" rel="noreferrer" aria-label="Matrix Solutions on X" className="w-10 h-10 rounded-full border border-slate-700 flex items-center justify-center hover:bg-matrix-blue-primary hover:border-matrix-blue-primary transition-all">
-                  <Twitter size={18} />
+                <a href="https://www.instagram.com/matrixsolutions.co/" target="_blank" rel="noreferrer" aria-label="Matrix Solutions on Instagram" className="w-10 h-10 rounded-full border border-slate-700 flex items-center justify-center hover:bg-matrix-blue-primary hover:border-matrix-blue-primary transition-all">
+                  <Instagram size={18} />
                 </a>
               </div>
             </div>
