@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import { Mail, Phone, MapPin, Send, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
 import usePageMeta from '../hooks/usePageMeta';
@@ -28,6 +28,9 @@ export default function Contact() {
   usePageMeta(getPageMeta('/contact'));
 
   const [form, setForm] = useState<FormState>(emptyForm);
+  // When the form appeared. Sent with the message so the server can tell a person from a bot
+  // that posts instantly without ever opening the form.
+  const openedAt = useRef(Date.now());
   const [status, setStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -45,7 +48,7 @@ export default function Contact() {
       const res = await fetch('/api/contact.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, elapsedMs: Date.now() - openedAt.current }),
       });
       const data = await res.json().catch(() => null);
       if (!res.ok) {
@@ -150,7 +153,10 @@ export default function Contact() {
                     <p className="text-matrix-slate font-medium">Thank you for reaching out. A Matrix consultant will contact you within 24 hours.</p>
                   </div>
                   <button
-                    onClick={() => setStatus('idle')}
+                    onClick={() => {
+                      openedAt.current = Date.now();
+                      setStatus('idle');
+                    }}
                     className="btn-secondary w-full"
                   >
                     Send Another Message
