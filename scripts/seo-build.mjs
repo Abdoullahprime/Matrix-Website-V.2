@@ -1,7 +1,7 @@
 // Runs after `vite build`. A single-page app serves the same index.html for every address, so
 // the title, description, canonical address and social tags are only correct once JavaScript
 // has run. This step gives every page its OWN HTML file with the right tags already in it, and
-// writes sitemap.xml, robots.txt and the web.config rules that serve those files.
+// writes sitemap-pages.xml, robots.txt and the web.config rules that serve those files.
 //
 // Everything comes from src/seo/pages.json and src/data/solutionPages.json, the same files the
 // running site reads, so the two cannot drift apart.
@@ -142,21 +142,28 @@ const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 ${pages.map((p) => `  <url><loc>${url(p.path)}</loc><lastmod>${today}</lastmod></url>`).join('\n')}
 </urlset>
 `;
-fs.writeFileSync(path.join(dist, 'sitemap.xml'), sitemap);
-fs.writeFileSync(path.join(dist, 'robots.txt'), `User-agent: *\nAllow: /\nDisallow: /api/\n\nSitemap: ${SITE}/sitemap.xml\n`);
+// The page list goes to sitemap-pages.xml; the live /sitemap.xml is made by api/sitemap.php,
+// which adds every published blog post (see the Sitemap rule in the web.config below).
+fs.writeFileSync(path.join(dist, 'sitemap-pages.xml'), sitemap);
+fs.writeFileSync(path.join(dist, 'robots.txt'), `User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /admin\n\nSitemap: ${SITE}/sitemap.xml\n`);
 
 // ---- web.config: serve each page's own HTML file --------------------------------------------
 const tplPath = path.join(root, 'iis', 'web.config');
 const marker = '<!-- SEO_ROUTE_RULES -->';
 const tpl = fs.readFileSync(tplPath, 'utf8');
 if (!tpl.includes(marker)) throw new Error(`iis/web.config must contain ${marker}`);
-const rules = pages
+const sitemapRule = `        <rule name="Sitemap" stopProcessing="true">
+          <match url="^sitemap\\.xml$" />
+          <action type="Rewrite" url="/api/sitemap.php" />
+        </rule>`;
+const pageRules = pages
   .filter((p) => p.path !== '/')
   .map((p) => {
     const rel = p.path.slice(1);
     return `        <rule name="Page ${rel}" stopProcessing="true">\n          <match url="^${rel}/?$" />\n          <action type="Rewrite" url="/${rel}.html" />\n        </rule>`;
   })
   .join('\n');
+const rules = sitemapRule + '\n' + pageRules;
 fs.writeFileSync(path.join(dist, 'web.config'), tpl.replace(marker, rules));
 
 // ---- report ------------------------------------------------------------------------------------
@@ -169,5 +176,5 @@ for (const r of report) {
   if (flag) warnings++;
   console.log(`  ${r.file.padEnd(58)} title ${String(r.title).padStart(2)}  desc ${String(r.desc).padStart(3)}${flag ? '   <-- ' + flag : ''}`);
 }
-console.log(`  sitemap.xml: ${pages.length} URLs   robots.txt   web.config: ${pages.length - 1} page rules`);
+console.log(`  sitemap-pages.xml: ${pages.length} URLs   robots.txt   web.config: ${pages.length - 1} page rules`);
 console.log(warnings ? `\n${warnings} page(s) need a look (search results cut long titles and descriptions).` : '\nAll titles and descriptions are a good length.');

@@ -11,6 +11,7 @@ const navItems = [
   { name: 'Clients', to: '/clients' },
   { name: 'About', to: '/about' },
   { name: 'Resources', to: '/resources' },
+  { name: 'Blog', to: '/blog' },
 ];
 
 export default function Layout() {
@@ -149,6 +150,7 @@ export default function Layout() {
                 <li><Link to="/about" className="hover:text-white transition-colors">About Matrix</Link></li>
                 <li><Link to="/clients" className="hover:text-white transition-colors">Our Clients</Link></li>
                 <li><Link to="/resources" className="hover:text-white transition-colors">Resources</Link></li>
+                <li><Link to="/blog" className="hover:text-white transition-colors">Blog</Link></li>
                 <li><Link to="/contact" className="hover:text-white transition-colors">Contact Sales</Link></li>
               </ul>
             </div>

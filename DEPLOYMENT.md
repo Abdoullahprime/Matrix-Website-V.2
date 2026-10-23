@@ -162,6 +162,33 @@ It must be `208.91.198.171`. Other names already resolve there through a wildcar
 Once the name points at Plesk, issue a free Let's Encrypt certificate under **SSL/TLS
 Certificates**. It fails if DNS is wrong, and until then browsers show "Not secure".
 
+## The blog and the admin area
+
+Staff manage the blog at `https://matrixgambia.com/admin`. Posts, pictures and admin logins are
+stored in the same MySQL database (tables are created automatically on first use). Pictures live
+in the database too, so no writable upload folder is needed.
+
+**First-time setup (once):**
+
+1. Add one line to `matrix.env` on the server, with a secret of your own (8+ characters):
+   `ADMIN_SETUP_KEY=<your secret>`
+2. Open `/admin`. Because no admin exists yet, the page asks for the setup key, a username and a
+   password (10+ characters). That creates the first admin and signs you in.
+3. Setup then refuses to run again. You can remove the `ADMIN_SETUP_KEY` line afterwards.
+
+**Writing a post:** "New post", then fill in the title, topic, summary and an optional header
+image, and add content blocks in the order they should appear: paragraph, heading, image (small,
+medium or wide, with caption), list, quote, YouTube video. "Preview" shows the finished post.
+"Save draft" keeps it hidden; "Publish" puts it on `/blog` (newest first; visitors can sort by
+oldest, search, and filter by topic). Setting a publish date in the future hides it until then.
+
+**Safety:** sign-in uses a session cookie (HttpOnly, SameSite=Strict, Secure on HTTPS), a secret
+token on every change, a same-site check, and a lock after repeated wrong passwords (10 per
+address or 6 per username in 15 minutes). Posts hold plain text only, never HTML. `/admin` is
+excluded in `robots.txt` and marked `noindex`.
+
+`/sitemap.xml` is generated live by `api/sitemap.php` (fixed pages plus published posts).
+
 ## Reading submissions
 
 ```sql
@@ -182,5 +209,6 @@ npm run server   # API on port 3001, using ./.env (see .env.example)
 npm run dev      # site on port 3000, proxying /api to it
 ```
 
-`server/index.ts` is a development stand-in for `iis/api/*.php`: same URLs, same rules. If
-you change one, change the other.
+`server/index.ts` is a development stand-in for the contact form only. The blog and admin exist
+only as PHP (`iis/api/`), so to try them locally run the PHP files against a MySQL database
+(for example `php -S 127.0.0.1:3001 -t iis` with `MATRIX_ENV_FILE` pointing at a settings file).

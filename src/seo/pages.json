@@ -34,6 +34,12 @@
       "h1": "Resources"
     },
     {
+      "path": "/blog",
+      "title": "Blog: HR, Payroll & IT Insights | Matrix Solutions",
+      "description": "News, guides and insights from Matrix Solutions on HR and payroll software, banking systems, IT infrastructure and digital transformation in The Gambia.",
+      "h1": "The Matrix Solutions Blog"
+    },
+    {
       "path": "/contact",
       "title": "Contact Matrix Solutions | Request a Demo in The Gambia",
       "description": "Talk to Matrix Solutions in Kanifing, The Gambia. Request a demo or consultation for HR, payroll, banking and IT infrastructure software.",

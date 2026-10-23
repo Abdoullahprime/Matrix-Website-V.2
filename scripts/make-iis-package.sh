@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Builds deploy/matrix-site.zip: everything that goes in the website folder on Plesk for
-# Windows (IIS). It is the compiled site, the PHP contact API and a web.config. No Node.js.
+# Windows (IIS). It is the compiled site, the PHP API (contact form, blog, admin) and a web.config. No Node.js.
 #   npm run build:iis   (build, SEO step, then this)
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -17,11 +17,13 @@ for d, _, files in os.walk("dist"):                     # the compiled site goes
     for f in files:
         full = os.path.join(d, f)
         members.append((full, os.path.relpath(full, "dist").replace(os.sep, "/")))
-for f in sorted(os.listdir("iis/api")):                 # the PHP API goes in api/
-    members.append((os.path.join("iis/api", f), "api/" + f))
+for d, _, files in os.walk("iis/api"):                  # the PHP API (and api/admin/) goes in api/
+    for f in files:
+        full = os.path.join(d, f)
+        members.append((full, "api/" + os.path.relpath(full, "iis/api").replace(os.sep, "/")))
 names = [m[1] for m in members]
 assert "index.html" in names and "api/contact.php" in names and "web.config" in names, "package is missing a required file"
-assert "sitemap.xml" in names and "robots.txt" in names, "SEO files missing: run the SEO step"
+assert "sitemap-pages.xml" in names and "api/sitemap.php" in names and "api/admin/auth.php" in names and "robots.txt" in names, "SEO files missing: run the SEO step"
 with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as z:
     for src, arc in sorted(members, key=lambda m: m[1]):
         z.write(src, arc)

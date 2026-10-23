@@ -41,6 +41,8 @@ function mx_config(): array
         'SMTP_HOST' => 'smtp.gmail.com', 'SMTP_PORT' => '465', 'SMTP_SECURE' => '',
         'SMTP_USER' => '', 'SMTP_PASSWORD' => '',
         'MAIL_FROM_NAME' => 'Matrix Solutions Website', 'MAIL_TO' => 'info@matrixgambia.com',
+        // Needed once, to create the first admin account at /admin. Leave empty to disable setup.
+        'ADMIN_SETUP_KEY' => '',
     ];
 
     $candidates = [
