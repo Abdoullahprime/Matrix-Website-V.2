@@ -28,7 +28,7 @@ export default function Layout() {
     <div className="min-h-screen flex flex-col">
       {/* Top Bar */}
       <div className="bg-matrix-navy text-white py-2 text-[10px] font-bold uppercase tracking-widest hidden md:block">
-        <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 flex justify-end gap-8">
+        <div className="max-w-7xl mx-auto px-6 sm:px-12 lg:px-24 flex justify-end gap-8">
           <span className="flex items-center gap-2">
             <Globe size={12} />
             West Africa (EN)
@@ -38,7 +38,7 @@ export default function Layout() {
 
       {/* Navigation */}
       <nav className={`glass-nav transition-all duration-300 ${scrolled ? 'py-3 shadow-md' : 'py-5'}`}>
-        <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-6 sm:px-12 lg:px-24 flex items-center justify-between">
           <Link to="/" aria-label="Matrix Solutions home">
             <Logo />
           </Link>
@@ -117,7 +117,7 @@ export default function Layout() {
 
       {/* Footer */}
       <footer className="bg-matrix-navy text-white pt-24 pb-12">
-        <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-16">
+        <div className="max-w-7xl mx-auto px-6 sm:px-12 lg:px-24">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 mb-24">
             <div className="space-y-8">
               <Logo light />
