@@ -1,32 +1,9 @@
 import React from 'react';
 import { clientLogo } from '../data/clientLogos';
+import { clientNames } from '../data/clients';
 
-const logos = [
-  { name: "GRA - GAMBIA REVENUE AUTHORITY" },
-  { name: "TBL - TRUST BANK GAMBIA LIMITED" },
-  { name: "NCAC - NATIONAL ARTS AND CULTURE" },
-  { name: "RFH - RIDERS FOR HEALTH" },
-  { name: "NFSPMC - NATIONAL FOOD SECURITY PRODUCTION AND MARKETING CORPORATION" },
-  { name: "BAC - BRIKAMA AREA COUNCIL" },
-  { name: "SAMA KAIRO" },
-  { name: "LOGIX" },
-  { name: "EFANET" },
-  { name: "IHRDA - INSTITUTE FOR HUMAN RIGHTS AND DEVELOPMENT IN AFRICA" },
-  { name: "SUNSHINE INSURANCE" },
-  { name: "BANJUL FISHERIES JETTY" },
-  { name: "ATLANTIC CLEANING SERVICES" },
-  { name: "BANSANG HOSPITAL" },
-  { name: "KGH - KANIFING GENERAL HOSPITAL" },
-  { name: "GPPC - GAMBIA PRINTING AND PUBLISHING CORPORATION" },
-  { name: "MUHAMMED SILLAH & SONS" },
-  { name: "KMC - KANIFING MUNICIPAL COUNCIL" },
-  { name: "GLMA - GAMBIA LIVESTOCK MARKETING AGENCY" },
-  { name: "JAH MULTI INDUSTRIES" },
-  { name: "SOMAGEC" },
-  { name: "GNIC - GAMBIA NATIONAL INSURANCE COMPANY" },
-  { name: "BSIC - BANQUE SAHELO-SAHARIENNE POUR L'INVESTISSEMENT ET LE COMMERCE" },
-  { name: "SAFE HAND CREDIT UNION" },
-];
+// Same clients, same order as the client list: both read src/data/clients.ts.
+const logos = clientNames.map((name) => ({ name }));
 
 export default function LogoWall() {
   // Duplicate logos for seamless loop

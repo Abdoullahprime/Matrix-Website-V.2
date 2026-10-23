@@ -51,7 +51,11 @@ npm run build:iis
 
 builds `deploy/matrix-site.zip`, which you import into the website folder on the server.
 
-## Client logos
+## Clients and client logos
+
+The clients, and the product each one runs, are listed once in `src/data/clients.ts`. The client
+list, the scrolling carousel and the solution pages all read from it, so to add a client, add a row
+there (and, if you have one, a logo as described below).
 
 Logos live in `src/assets/clients/` and are matched to clients by filename: the client's short
 name (the part before ` - ` in the client list), lower-cased with dashes, e.g. `kgh.webp` for

@@ -3,41 +3,8 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { Search, ChevronRight, X } from 'lucide-react';
 import { clientLogo } from '../data/clientLogos';
+import { clientData } from '../data/clients';
 
-const clientData = [
-  { client: "GRA - GAMBIA REVENUE AUTHORITY", product: "Human Resources Management System", date: "10 Nov 2025", type: "Standard" },
-  { client: "TBL - TRUST BANK GAMBIA LIMITED", product: "Inventory Management System", date: "10 Nov 2025", type: "Standard" },
-  { client: "TBL - TRUST BANK GAMBIA LIMITED", product: "Online Recruitment Management System", date: "10 Nov 2025", type: "Standard" },
-  { client: "TBL - TRUST BANK GAMBIA LIMITED", product: "Central Bank Compliance Reporting Interface System", date: "10 Nov 2025", type: "Standard" },
-  { client: "NCAC - NATIONAL ARTS AND CULTURE", product: "Human Resource and Payroll Management System", date: "10 Nov 2025", type: "Standard" },
-  { client: "RFH - RIDERS FOR HEALTH", product: "Human Resource and Payroll Management System", date: "10 Nov 2025", type: "Standard" },
-  { client: "NFSPMC - NATIONAL FOOD SECURITY PRODUCTION AND MARKETING CORPORATION", product: "Human Resource and Payroll Management System", date: "10 Nov 2025", type: "Standard" },
-  { client: "NFSPMC - NATIONAL FOOD SECURITY PRODUCTION AND MARKETING CORPORATION", product: "POS System", date: "10 Nov 2025", type: "Standard" },
-  { client: "BAC - BRIKAMA AREA COUNCIL", product: "Human Resource and Payroll Management System", date: "10 Nov 2025", type: "Standard" },
-  { client: "BAC - BRIKAMA AREA COUNCIL", product: "Accounts Management System", date: "10 Nov 2025", type: "Standard" },
-  { client: "SAMA KAIRO", product: "Human Resource and Payroll Management System", date: "10 Nov 2025", type: "Standard" },
-  { client: "LOGIX", product: "Human Resource and Payroll Management System", date: "10 Nov 2025", type: "Standard" },
-  { client: "EFANET", product: "Payroll Management System", date: "10 Nov 2025", type: "Standard" },
-  { client: "EFANET", product: "Document Management System", date: "10 Nov 2025", type: "Standard" },
-  { client: "IHRDA - INSTITUTE FOR HUMAN RIGHTS AND DEVELOPMENT IN AFRICA", product: "Payroll Management System", date: "10 Nov 2025", type: "Standard" },
-  { client: "IHRDA - INSTITUTE FOR HUMAN RIGHTS AND DEVELOPMENT IN AFRICA", product: "Accounts Management System", date: "10 Nov 2025", type: "Standard" },
-  { client: "SUNSHINE INSURANCE", product: "Human Resource and Payroll Management System", date: "10 Nov 2025", type: "Standard" },
-  { client: "BANJUL FISHERIES JETTY", product: "Accounts Management System", date: "10 Nov 2025", type: "Standard" },
-  { client: "ATLANTIC CLEANING SERVICES", product: "Payroll Management System", date: "10 Nov 2025", type: "Standard" },
-  { client: "BANSANG HOSPITAL", product: "Payroll Management System", date: "10 Nov 2025", type: "Standard" },
-  { client: "BANSANG HOSPITAL", product: "Human Resource and Payroll Management System", date: "10 Nov 2025", type: "Standard" },
-  { client: "KGH - KANIFING GENERAL HOSPITAL", product: "Payroll Management System", date: "10 Nov 2025", type: "Standard" },
-  { client: "KGH - KANIFING GENERAL HOSPITAL", product: "Human Resource and Payroll Management System", date: "10 Nov 2025", type: "Standard" },
-  { client: "GPPC - GAMBIA PRINTING AND PUBLISHING CORPORATION", product: "Payroll Management System", date: "10 Nov 2025", type: "Standard" },
-  { client: "MUHAMMED SILLAH & SONS", product: "POS System", date: "10 Nov 2025", type: "Standard" },
-  { client: "KMC - KANIFING MUNICIPAL COUNCIL", product: "Property Tax Management System", date: "10 Nov 2025", type: "Standard" },
-  { client: "GLMA - GAMBIA LIVESTOCK MARKETING AGENCY", product: "Payroll Management System", date: "10 Nov 2025", type: "Standard" },
-  { client: "JAH MULTI INDUSTRIES", product: "Cement Management System", date: "10 Nov 2025", type: "Standard" },
-  { client: "SOMAGEC", product: "Payroll Management System", date: "10 Nov 2025", type: "Standard" },
-  { client: "GNIC - GAMBIA NATIONAL INSURANCE COMPANY", product: "Fixed Assets Management System", date: "10 Nov 2025", type: "Standard" },
-  { client: "BSIC - BANQUE SAHELO-SAHARIENNE POUR L'INVESTISSEMENT ET LE COMMERCE", product: "Central Bank Compliance Reporting Interface System", date: "10 Nov 2025", type: "Standard" },
-  { client: "SAFE HAND CREDIT UNION", product: "Micro Banker for Credit Union System", date: "10 Nov 2025", type: "Standard" },
-];
 
 type Placement = 'top' | 'bottom' | 'left' | 'right';
 
