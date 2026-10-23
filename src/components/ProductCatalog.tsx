@@ -85,7 +85,7 @@ export default function ProductCatalog() {
       {/* Intro block. The white oval is sized to THIS block (twice its height, centred
           on its top edge), so its lowest point always sits at the bottom of the intro
           and the product categories below can never run into the curve. */}
-      <div className="relative pt-32 pb-28">
+      <div className="relative pt-16 md:pt-20 pb-28">
         <div className="absolute left-1/2 -translate-x-1/2 top-[-100%] h-[200%] w-[150%] bg-white rounded-[100%] shadow-sm border-b border-slate-100" />
 
         <div className="container-custom relative z-10">
@@ -94,9 +94,9 @@ export default function ProductCatalog() {
               <Info size={14} />
               Our Ecosystem
             </div>
-            <h2 className="text-4xl md:text-6xl font-extrabold text-matrix-navy mb-8 tracking-tight">
+            <h1 className="text-4xl md:text-6xl font-extrabold text-matrix-navy mb-8 tracking-tight">
               One platform for <span className="text-matrix-blue-primary">all your needs</span>.
-            </h2>
+            </h1>
             <p className="text-matrix-slate text-xl font-medium leading-relaxed">
               A wide variety of generic software solutions, catering to your needs, no matter the industry.
             </p>

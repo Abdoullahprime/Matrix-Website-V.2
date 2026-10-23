@@ -8,12 +8,9 @@ interface SolutionsGridProps {
   showCta?: boolean;
   label?: string;
   labelNumber?: string;
-  /** The Solutions page uses h1; on the home page this stays h2. */
-  headingLevel?: 'h1' | 'h2';
 }
 
-export default function SolutionsGrid({ showCta = true, label, labelNumber, headingLevel = 'h2' }: SolutionsGridProps) {
-  const Heading = headingLevel;
+export default function SolutionsGrid({ showCta = true, label, labelNumber }: SolutionsGridProps) {
   const solutions = [
     {
       title: "Banking & Finance",
@@ -50,9 +47,9 @@ export default function SolutionsGrid({ showCta = true, label, labelNumber, head
       <div className="container-custom">
         <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
           {label && labelNumber && <SectionLabel number={labelNumber}>{label}</SectionLabel>}
-          <Heading className="text-4xl md:text-5xl font-extrabold text-matrix-navy">
+          <h2 className="text-4xl md:text-5xl font-extrabold text-matrix-navy">
             Launch faster with Matrix solutions, built for your industry.
-          </Heading>
+          </h2>
           <p className="text-lg text-slate-600 font-medium">
             Designed with industry expertise, these out-of-the-box solutions align with your workflows, data, and customer needs.
           </p>
