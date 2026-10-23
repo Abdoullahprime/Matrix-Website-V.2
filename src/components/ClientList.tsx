@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { Search, ChevronRight, X } from 'lucide-react';
 import { clientLogo } from '../data/clientLogos';
-import { clientData } from '../data/clients';
+import { clientData, clientDisplayName } from '../data/clients';
 
 
 type Placement = 'top' | 'bottom' | 'left' | 'right';
@@ -185,7 +185,7 @@ export default function ClientList() {
               onBlur={(e) => {
                 if (!cardRef.current?.contains(e.relatedTarget as Node)) scheduleClose();
               }}
-              className="aspect-square bg-slate-50 rounded-2xl flex flex-col items-center justify-center p-6 border border-slate-100 hover:border-matrix-blue-primary focus-visible:border-matrix-blue-primary hover:bg-white transition-all cursor-pointer shadow-sm hover:shadow-xl group outline-none focus-visible:ring-2 focus-visible:ring-matrix-blue-primary/30"
+              className="min-h-[15rem] bg-slate-50 rounded-2xl flex flex-col items-center justify-center p-6 border border-slate-100 hover:border-matrix-blue-primary focus-visible:border-matrix-blue-primary hover:bg-white transition-all cursor-pointer shadow-sm hover:shadow-xl group outline-none focus-visible:ring-2 focus-visible:ring-matrix-blue-primary/30"
             >
               {/* Same-height slot for logo or lettered badge, so labels line up across a row */}
               <div className="w-full h-16 sm:h-20 md:h-24 mb-4 flex items-center justify-center">
@@ -199,12 +199,12 @@ export default function ClientList() {
                   />
                 ) : (
                   <div className="w-16 h-16 bg-matrix-navy rounded-xl flex items-center justify-center text-white font-black text-3xl group-hover:bg-matrix-blue-primary transition-colors">
-                    {name.charAt(0)}
+                    {clientDisplayName(name).charAt(0)}
                   </div>
                 )}
               </div>
-              <div className="text-[10px] font-black text-matrix-navy uppercase tracking-widest text-center leading-tight line-clamp-2">
-                {name.split(' - ')[0]}
+              <div className="text-[10px] font-black text-matrix-navy uppercase tracking-wider text-center leading-snug line-clamp-5">
+                {clientDisplayName(name)}
               </div>
             </motion.button>
           ))}
@@ -226,7 +226,7 @@ export default function ClientList() {
               style={pos ? { top: pos.top, left: pos.left } : { top: 0, left: -9999 }}
               className="fixed z-50 w-72 max-w-[calc(100vw-24px)]"
               role="dialog"
-              aria-label={`Solutions implemented for ${active.name}`}
+              aria-label={`Solutions implemented for ${clientDisplayName(active.name)}`}
               onPointerEnter={(e) => { if (e.pointerType === 'mouse') cancelClose(); }}
               onPointerLeave={(e) => { if (e.pointerType === 'mouse') scheduleClose(); }}
               onPointerDown={cancelClose}
@@ -241,7 +241,7 @@ export default function ClientList() {
                   <X size={14} />
                 </button>
                 <div className="text-xs font-black text-matrix-blue-light uppercase tracking-[0.2em] mb-3 pr-8">Client Profile</div>
-                <h4 className="text-lg font-extrabold mb-4 leading-tight pr-4">{active.name}</h4>
+                <h4 className="text-lg font-extrabold mb-4 leading-tight pr-4">{clientDisplayName(active.name)}</h4>
                 <div className="space-y-3">
                   <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-white/10 pb-2">Solutions Implemented</div>
                   <ul className="space-y-2">

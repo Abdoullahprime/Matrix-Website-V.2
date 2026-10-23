@@ -6,14 +6,14 @@ import solutionPages from '../data/solutionPages.json';
 import usePageMeta from '../hooks/usePageMeta';
 import { getPageMeta, solutionPath } from '../seo/meta';
 import { clientLogo } from '../data/clientLogos';
+import { clientDisplayName } from '../data/clients';
 import Breadcrumbs from '../components/Breadcrumbs';
 import FaqSection from '../components/FaqSection';
 import SectionLabel from '../components/SectionLabel';
 import NotFound from './NotFound';
 
 function ClientCard({ name }: { name: string }) {
-  const [code, ...rest] = name.split(' - ');
-  const full = rest.join(' - ');
+  const display = clientDisplayName(name);
   const logo = clientLogo(name);
   return (
     <li className="flex items-center gap-4 p-5 rounded-2xl border border-slate-100 bg-white">
@@ -22,14 +22,11 @@ function ClientCard({ name }: { name: string }) {
           <img src={logo} alt="" loading="lazy" decoding="async" className="max-h-14 max-w-full w-auto h-auto object-contain" />
         ) : (
           <div className="w-12 h-12 rounded-xl bg-matrix-navy text-white font-black text-xl flex items-center justify-center">
-            {name.charAt(0)}
+            {display.charAt(0)}
           </div>
         )}
       </div>
-      <div className="min-w-0">
-        <div className="font-extrabold text-matrix-navy text-sm leading-tight">{code}</div>
-        {full && <div className="text-[11px] text-matrix-slate font-medium leading-snug mt-0.5">{full}</div>}
-      </div>
+      <div className="min-w-0 font-extrabold text-matrix-navy text-sm leading-snug">{display}</div>
     </li>
   );
 }
