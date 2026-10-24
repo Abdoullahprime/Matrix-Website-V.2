@@ -21,7 +21,7 @@ try {
     $slug = (string)($_GET['slug'] ?? '');
     if ($slug !== '') {
         $stmt = $db->prepare(
-            "SELECT id, slug, title, excerpt, category, cover_media_id, cover_alt, highlights, blocks, author, published_at, updated_at
+            "SELECT id, slug, title, title_font, excerpt, category, cover_media_id, cover_alt, highlights, blocks, author, published_at, updated_at
              FROM posts WHERE slug = ? AND status = 'published' AND published_at <= NOW()"
         );
         $stmt->bind_param('s', $slug);
@@ -35,6 +35,7 @@ try {
             'post' => [
                 'slug' => $p['slug'],
                 'title' => $p['title'],
+                'titleFont' => $p['title_font'],
                 'excerpt' => $p['excerpt'],
                 'category' => $p['category'],
                 'cover' => mx_media_url($p['cover_media_id'] !== null ? (int)$p['cover_media_id'] : null),

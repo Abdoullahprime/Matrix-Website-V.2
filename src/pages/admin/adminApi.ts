@@ -26,6 +26,8 @@ export interface EditablePost {
   product?: string;
   slug: string;
   title: string;
+  /** Font of the page's main title. */
+  titleFont?: 'sans' | 'serif' | 'handwritten';
   excerpt: string;
   category: string;
   author: string;

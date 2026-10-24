@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, Clock, Loader2 } from 'lucide-react';
 import usePageMeta from '../hooks/usePageMeta';
-import BlogBlocks from '../components/BlogBlocks';
+import BlogBlocks, { fontStyle, useHandwrittenFont } from '../components/BlogBlocks';
 import NotFound from './NotFound';
 import { PostFull, fetchPost, formatDate, readingMinutes, seoTitle } from '../lib/blog';
 
@@ -26,6 +26,8 @@ export default function BlogPost() {
       cancelled = true;
     };
   }, [slug]);
+
+  useHandwrittenFont(post?.blocks ?? [], post?.titleFont);
 
   // Title, description and canonical follow the post once it has loaded.
   usePageMeta({
@@ -59,7 +61,7 @@ export default function BlogPost() {
             <Clock size={13} /> {readingMinutes(post.blocks)} min read
           </span>
         </div>
-        <h1 className="text-4xl md:text-6xl font-extrabold text-matrix-navy leading-tight">{post.title}</h1>
+        <h1 style={fontStyle[post.titleFont ?? 'sans']} className="text-4xl md:text-6xl font-extrabold text-matrix-navy leading-tight">{post.title}</h1>
         {post.excerpt && <p className="mt-6 text-xl text-slate-600 font-medium leading-relaxed">{post.excerpt}</p>}
         {post.author && <p className="mt-6 text-sm font-bold text-matrix-navy">By {post.author}</p>}
       </header>

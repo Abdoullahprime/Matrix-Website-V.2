@@ -17,7 +17,7 @@ export type Block =
   | { type: 'image'; mediaId: number; url?: string; size: ImageSize; alt: string; caption: string }
   | { type: 'list'; ordered: boolean; items: string[] }
   | { type: 'quote'; text: string; cite: string }
-  | { type: 'video'; youtubeId?: string; url?: string; caption: string }
+  | { type: 'video'; youtubeId?: string; url?: string; caption: string; size?: ImageSize }
   | { type: 'buttons'; items: ButtonItem[]; align?: Align }
   | {
       type: 'split';
@@ -30,6 +30,8 @@ export type Block =
       video?: string;
       alt: string;
       font?: TitleFont;
+      items?: string[];
+      ordered?: boolean;
       buttons: ButtonItem[];
     };
 
@@ -45,6 +47,7 @@ export interface PostSummary {
 }
 
 export interface PostFull extends PostSummary {
+  titleFont?: TitleFont;
   highlights: string[];
   blocks: Block[];
   updatedAt: string;

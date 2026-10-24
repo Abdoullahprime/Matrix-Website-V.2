@@ -4,12 +4,14 @@ import { motion } from 'motion/react';
 import { CheckCircle2, Loader2 } from 'lucide-react';
 import usePageMeta from '../hooks/usePageMeta';
 import Breadcrumbs from '../components/Breadcrumbs';
-import BlogBlocks from '../components/BlogBlocks';
+import BlogBlocks, { fontStyle, useHandwrittenFont } from '../components/BlogBlocks';
+import { TitleFont } from '../lib/blog';
 import OtherApps from '../components/OtherApps';
 import NotFound from './NotFound';
 import { Block, seoTitle } from '../lib/blog';
 
 interface ProductPage {
+  titleFont?: TitleFont;
   slug: string;
   product: string;
   title: string;
@@ -49,6 +51,8 @@ export default function ProductSolutionPage({ slug }: { slug: string }) {
     };
   }, [slug]);
 
+  useHandwrittenFont(page?.blocks ?? [], page?.titleFont);
+
   usePageMeta({
     path: `/solutions/${slug}`,
     title: page ? seoTitle(page.title) : 'Solutions | Matrix Solutions',
@@ -72,7 +76,7 @@ export default function ProductSolutionPage({ slug }: { slug: string }) {
         <div className="container-custom py-16 md:py-24 space-y-8">
           <Breadcrumbs light items={[{ name: 'Home', to: '/' }, { name: 'Solutions', to: '/solutions' }, { name: page.product || page.title }]} />
           <div className="max-w-3xl space-y-6">
-            <h1 className="text-4xl md:text-6xl font-extrabold leading-tight tracking-tight">{page.title}</h1>
+            <h1 style={fontStyle[page.titleFont ?? 'sans']} className="text-4xl md:text-6xl font-extrabold leading-tight tracking-tight">{page.title}</h1>
             {page.excerpt && <p className="text-lg md:text-xl text-slate-200 font-medium leading-relaxed">{page.excerpt}</p>}
           </div>
           <div className="flex flex-col sm:flex-row gap-4 pt-2">

@@ -97,6 +97,13 @@ function mx_cms_schema(mysqli $db): void
             updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
     );
+    // The font of a page's main title (added after the first release, so existing tables get it too).
+    foreach (['posts', 'solution_pages'] as $t) {
+        $has = $db->query("SHOW COLUMNS FROM $t LIKE 'title_font'")->num_rows > 0;
+        if (!$has) {
+            $db->query("ALTER TABLE $t ADD COLUMN title_font VARCHAR(12) NOT NULL DEFAULT 'sans'");
+        }
+    }
     $done = true;
 }
 
@@ -373,7 +380,10 @@ function mx_clean_blocks(mysqli $db, mixed $blocks): array
                     mx_json(400, ['error' => "Block $n: paste a YouTube link."]);
                 }
                 $caption = mx_text($b['caption'] ?? '', 300);
-                $clean[] = ['type' => 'video', 'youtubeId' => $vid, 'caption' => $caption];
+                $clean[] = [
+                    'type' => 'video', 'youtubeId' => $vid, 'caption' => $caption,
+                    'size' => mx_choice($b['size'] ?? '', ['small', 'normal', 'wide'], 'wide'),
+                ];
                 $search[] = $caption;
                 break;
             case 'buttons':
@@ -401,18 +411,27 @@ function mx_clean_blocks(mysqli $db, mixed $blocks): array
                         mx_json(400, ['error' => "Block $n: choose a picture (or paste a YouTube link)."]);
                     }
                 }
-                if ($heading === '' && $text === '') {
+                if ($heading === '' && $text === '' && !array_filter((array)($b['items'] ?? []), 'is_string')) {
                     mx_json(400, ['error' => "Block $n: add some text next to the picture."]);
                 }
                 $alt = mx_text($b['alt'] ?? '', 300);
+                $listItems = [];
+                foreach ((is_array($b['items'] ?? null) ? $b['items'] : []) as $it) {
+                    $t = mx_text($it, 400);
+                    if ($t !== '') {
+                        $listItems[] = $t;
+                    }
+                }
+                $listItems = array_slice($listItems, 0, 20);
                 $clean[] = [
                     'type' => 'split', 'side' => ($b['side'] ?? '') === 'right' ? 'right' : 'left',
-                    'heading' => $heading, 'text' => $text, 'mediaId' => $video === null ? $mid : 0,
+                    'heading' => $heading, 'text' => $text, 'items' => $listItems, 'ordered' => !empty($b['ordered']),
+                    'mediaId' => $video === null ? $mid : 0,
                     'youtubeId' => $video ?? '', 'alt' => $alt,
                     'font' => mx_choice($b['font'] ?? '', ['sans', 'serif', 'handwritten'], 'sans'),
                     'buttons' => mx_clean_buttons($b['buttons'] ?? [], $n),
                 ];
-                $search[] = $heading . ' ' . $text . ' ' . $alt;
+                $search[] = $heading . ' ' . $text . ' ' . $alt . ' ' . implode(' ', $listItems);
                 break;
             default:
                 mx_json(400, ['error' => "Block $n has an unknown type."]);

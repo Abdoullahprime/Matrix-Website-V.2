@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowDown, ArrowUp, Columns, Heading2, Image as ImageIcon, List, Loader2, MousePointerClick, Plus, Quote, Trash2, Type, Video, X } from 'lucide-react';
-import BlogBlocks from '../../components/BlogBlocks';
+import BlogBlocks, { fontStyle, useHandwrittenFont } from '../../components/BlogBlocks';
 import { Align, Block, ButtonItem, ImageSize, TitleFont } from '../../lib/blog';
 import { adminApi, EditablePost, prepareImage } from './adminApi';
 import { productCategories, productSlug } from '../../data/products';
@@ -42,7 +42,7 @@ const newBlock = (type: Block['type']): Block => {
     case 'quote':
       return { type, text: '', cite: '' };
     case 'video':
-      return { type, url: '', caption: '' };
+      return { type, url: '', caption: '', size: 'wide' };
   }
 };
 
@@ -140,6 +140,7 @@ export default function PostEditor({ postId, kind = 'post' }: { postId: number |
   const [message, setMessage] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null);
   const [preview, setPreview] = useState(false);
   const [slugTouched, setSlugTouched] = useState(false);
+  useHandwrittenFont(post.blocks, post.titleFont);
 
   useEffect(() => {
     if (postId === null) return;
@@ -236,7 +237,7 @@ export default function PostEditor({ postId, kind = 'post' }: { postId: number |
         <div className="bg-white rounded-2xl border border-slate-100 p-8 md:p-12">
           <div className="max-w-3xl mx-auto">
             {post.category && <div className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-3">{post.category}</div>}
-            <h2 className="text-4xl md:text-5xl font-extrabold text-matrix-navy leading-tight">{post.title || 'Untitled'}</h2>
+            <h2 style={fontStyle[post.titleFont ?? 'sans']} className="text-4xl md:text-5xl font-extrabold text-matrix-navy leading-tight">{post.title || 'Untitled'}</h2>
             {post.excerpt && <p className="mt-5 text-xl text-slate-600 font-medium">{post.excerpt}</p>}
             {post.coverUrl && <img src={post.coverUrl} alt={post.coverAlt} className="mt-8 w-full max-h-[420px] object-cover rounded-2xl" />}
             {post.highlights.length > 0 && (
@@ -258,6 +259,7 @@ export default function PostEditor({ postId, kind = 'post' }: { postId: number |
               <label className={label} htmlFor="p-title">Title</label>
               <input
                 id="p-title"
+                style={fontStyle[post.titleFont ?? 'sans']}
                 className={`${field} text-lg`}
                 value={post.title}
                 maxLength={200}
@@ -267,6 +269,10 @@ export default function PostEditor({ postId, kind = 'post' }: { postId: number |
                 }}
                 placeholder="A clear, specific title"
               />
+            </div>
+            <div className="max-w-xs">
+              <label className={label} htmlFor="p-titlefont">Title font</label>
+              <FontSelect value={post.titleFont ?? 'sans'} onChange={(v) => set('titleFont', v)} />
             </div>
             {isSolution && (
               <div>
@@ -447,6 +453,18 @@ export default function PostEditor({ postId, kind = 'post' }: { postId: number |
                     </div>
                     <input className={field} value={b.heading} maxLength={200} onChange={(e) => setBlock(i, { heading: e.target.value })} placeholder="Title (optional)" />
                     <textarea className={`${field} resize-y`} rows={4} maxLength={4000} value={b.text} onChange={(e) => setBlock(i, { text: e.target.value })} placeholder="Text next to the picture" />
+                    <div className="space-y-2">
+                      <label className="flex items-center gap-2 text-sm font-bold text-matrix-navy">
+                        <input type="checkbox" checked={!!b.ordered} onChange={(e) => setBlock(i, { ordered: e.target.checked })} /> Numbered list
+                      </label>
+                      <textarea
+                        className={`${field} resize-y`}
+                        rows={3}
+                        value={(b.items ?? []).join('\n')}
+                        onChange={(e) => setBlock(i, { items: e.target.value.split('\n') })}
+                        placeholder="List under the text, one item per line (optional)"
+                      />
+                    </div>
                     <div className="space-y-3 rounded-xl border border-slate-100 p-4">
                       {b.url && !b.video ? <img src={b.url} alt="" className="max-h-40 rounded-lg border border-slate-100" /> : null}
                       <ImagePicker onPicked={(id, url) => setBlock(i, { mediaId: id, url, video: '' } as Partial<Block>)} />
@@ -494,6 +512,11 @@ export default function PostEditor({ postId, kind = 'post' }: { postId: number |
                 {b.type === 'video' && (
                   <div className="space-y-3">
                     <input className={field} value={b.url ?? ''} onChange={(e) => setBlock(i, { url: e.target.value })} placeholder="Paste a YouTube link" />
+                    <select className={field} value={b.size ?? 'wide'} onChange={(e) => setBlock(i, { size: e.target.value as ImageSize })} aria-label="Video size">
+                      <option value="small">Size: Small</option>
+                      <option value="normal">Size: Medium</option>
+                      <option value="wide">Size: Wide</option>
+                    </select>
                     <input className={field} value={b.caption} maxLength={300} onChange={(e) => setBlock(i, { caption: e.target.value })} placeholder="Caption (optional)" />
                   </div>
                 )}

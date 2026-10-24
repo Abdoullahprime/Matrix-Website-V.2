@@ -38,6 +38,7 @@ try {
             'slug' => $p['slug'],
             'product' => $p['product'],
             'title' => $p['title'],
+            'titleFont' => $p['title_font'],
             'excerpt' => $p['excerpt'],
             'coverMediaId' => $cid,
             'coverUrl' => mx_media_url($cid),
@@ -78,6 +79,7 @@ try {
         mx_json(400, ['error' => 'Give the page a title.']);
     }
     $excerpt = mx_text($body['excerpt'] ?? '', 400);
+    $titleFont = mx_choice($body['titleFont'] ?? '', ['sans', 'serif', 'handwritten'], 'sans');
     $coverAlt = mx_text($body['coverAlt'] ?? '', 300);
     $status = ($body['status'] ?? '') === 'published' ? 'published' : 'draft';
     $cover = (int)($body['coverMediaId'] ?? 0);
@@ -108,16 +110,16 @@ try {
 
     if ($id > 0) {
         $stmt = $db->prepare(
-            'UPDATE solution_pages SET slug=?, product=?, title=?, excerpt=?, cover_media_id=?, cover_alt=?, highlights=?, blocks=?, search_text=?, status=? WHERE id=?'
+            'UPDATE solution_pages SET slug=?, product=?, title=?, excerpt=?, cover_media_id=?, cover_alt=?, highlights=?, blocks=?, search_text=?, status=?, title_font=? WHERE id=?'
         );
-        $stmt->bind_param('ssssisssssi', $slug, $product, $title, $excerpt, $coverId, $coverAlt, $highlightsJson, $blocksJson, $search, $status, $id);
+        $stmt->bind_param('ssssissssssi', $slug, $product, $title, $excerpt, $coverId, $coverAlt, $highlightsJson, $blocksJson, $search, $status, $titleFont, $id);
         $stmt->execute();
         $stmt->close();
     } else {
         $stmt = $db->prepare(
-            'INSERT INTO solution_pages (slug, product, title, excerpt, cover_media_id, cover_alt, highlights, blocks, search_text, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+            'INSERT INTO solution_pages (slug, product, title, excerpt, cover_media_id, cover_alt, highlights, blocks, search_text, status, title_font) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         );
-        $stmt->bind_param('ssssisssss', $slug, $product, $title, $excerpt, $coverId, $coverAlt, $highlightsJson, $blocksJson, $search, $status);
+        $stmt->bind_param('ssssissssss', $slug, $product, $title, $excerpt, $coverId, $coverAlt, $highlightsJson, $blocksJson, $search, $status, $titleFont);
         $stmt->execute();
         $id = (int)$db->insert_id;
         $stmt->close();

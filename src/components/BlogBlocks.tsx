@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Align, Block, ButtonItem, TitleFont } from '../lib/blog';
+import { Align, Block, ButtonItem, ImageSize, TitleFont } from '../lib/blog';
 
 const imageWidth = {
   small: 'max-w-sm',
@@ -13,7 +13,7 @@ const flexAlign: Record<Align, string> = { left: 'justify-start', center: 'justi
 // Paragraphs stay a readable width; centred or right-aligned ones sit at that side of the column.
 const blockAlign: Record<Align, string> = { left: '', center: 'mx-auto', right: 'ml-auto' };
 
-const fontStyle: Record<TitleFont, React.CSSProperties | undefined> = {
+export const fontStyle: Record<TitleFont, React.CSSProperties | undefined> = {
   sans: undefined,
   serif: { fontFamily: "Georgia, 'Times New Roman', Times, serif" },
   handwritten: { fontFamily: "'Caveat', 'Segoe Script', 'Comic Sans MS', cursive", fontWeight: 700 },
@@ -21,11 +21,11 @@ const fontStyle: Record<TitleFont, React.CSSProperties | undefined> = {
 
 const CAVEAT_ID = 'mx-font-caveat';
 
-/** The handwritten font is only fetched when a page actually uses it. */
-function useHandwrittenFont(blocks: Block[]) {
-  const needed = blocks.some(
-    (b) => (b.type === 'heading' && b.font === 'handwritten') || (b.type === 'split' && b.font === 'handwritten')
-  );
+/** The handwritten font is only fetched when a page actually uses it (a title, or any block). */
+export function useHandwrittenFont(blocks: Block[], titleFont?: TitleFont) {
+  const needed =
+    titleFont === 'handwritten' ||
+    blocks.some((b) => (b.type === 'heading' && b.font === 'handwritten') || (b.type === 'split' && b.font === 'handwritten'));
   useEffect(() => {
     if (!needed || document.getElementById(CAVEAT_ID)) return;
     const link = document.createElement('link');
@@ -85,9 +85,9 @@ const headingSize = {
   3: 'text-2xl leading-snug',
 } as const;
 
-function Video({ id, title }: { id: string; title: string }) {
+function Video({ id, title, size }: { id: string; title: string; size?: ImageSize }) {
   return (
-    <div className="aspect-video rounded-xl overflow-hidden border border-slate-100 bg-slate-100">
+    <div className={`aspect-video rounded-xl overflow-hidden border border-slate-100 bg-slate-100 w-full ${size ? `mx-auto ${imageWidth[size] ?? imageWidth.wide}` : ''}`}>
       <iframe
         src={`https://www.youtube-nocookie.com/embed/${id}`}
         title={title || 'Video'}
@@ -152,6 +152,17 @@ export default function BlogBlocks({ blocks, spacious = false }: { blocks: Block
                     </h3>
                   )}
                   {b.text && <p className="text-lg leading-[1.8] text-slate-700 whitespace-pre-line">{b.text}</p>}
+                  {b.items && b.items.length > 0 &&
+                    (() => {
+                      const Tag = b.ordered ? 'ol' : 'ul';
+                      return (
+                        <Tag className={`pl-6 space-y-2 text-lg leading-[1.7] text-slate-700 ${b.ordered ? 'list-decimal' : 'list-disc'}`}>
+                          {b.items.map((it, j) => (
+                            <li key={j}>{it}</li>
+                          ))}
+                        </Tag>
+                      );
+                    })()}
                   <Buttons items={b.buttons ?? []} align="left" />
                 </div>
               </div>
@@ -196,7 +207,7 @@ export default function BlogBlocks({ blocks, spacious = false }: { blocks: Block
             if (!id) return null;
             return (
               <figure key={i} className="my-10">
-                <Video id={id} title={b.caption} />
+                <Video id={id} title={b.caption} size={b.size ?? 'wide'} />
                 {b.caption && <figcaption className="mt-3 text-sm text-slate-500 text-center">{b.caption}</figcaption>}
               </figure>
             );

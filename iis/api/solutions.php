@@ -23,7 +23,7 @@ try {
     }
 
     $stmt = $db->prepare(
-        "SELECT slug, product, title, excerpt, cover_media_id, cover_alt, highlights, blocks, updated_at
+        "SELECT slug, product, title, title_font, excerpt, cover_media_id, cover_alt, highlights, blocks, updated_at
          FROM solution_pages WHERE slug = ? AND status = 'published'"
     );
     $stmt->bind_param('s', $slug);
@@ -38,6 +38,7 @@ try {
         'slug' => $p['slug'],
         'product' => $p['product'],
         'title' => $p['title'],
+        'titleFont' => $p['title_font'],
         'excerpt' => $p['excerpt'],
         'cover' => mx_media_url($p['cover_media_id'] !== null ? (int)$p['cover_media_id'] : null),
         'coverAlt' => $p['cover_alt'],

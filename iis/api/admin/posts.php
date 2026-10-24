@@ -39,6 +39,7 @@ try {
             'id' => (int)$p['id'],
             'slug' => $p['slug'],
             'title' => $p['title'],
+            'titleFont' => $p['title_font'],
             'excerpt' => $p['excerpt'],
             'category' => $p['category'],
             'coverMediaId' => $p['cover_media_id'] !== null ? (int)$p['cover_media_id'] : null,
@@ -84,6 +85,7 @@ try {
         mx_json(400, ['error' => 'Give the post a title.']);
     }
     $excerpt = mx_text($body['excerpt'] ?? '', 400);
+    $titleFont = mx_choice($body['titleFont'] ?? '', ['sans', 'serif', 'handwritten'], 'sans');
     $category = mx_text($body['category'] ?? '', 60);
     $author = mx_text($body['author'] ?? '', 80);
     $coverAlt = mx_text($body['coverAlt'] ?? '', 300);
@@ -127,26 +129,26 @@ try {
     if ($id > 0) {
         $stmt = $db->prepare(
             "UPDATE posts SET slug=?, title=?, excerpt=?, category=?, cover_media_id=?, cover_alt=?, highlights=?, blocks=?,
-                search_text=?, status=?, author=?,
+                search_text=?, status=?, author=?, title_font=?,
                 published_at = CASE WHEN ? IS NOT NULL THEN ? WHEN ? = 'published' THEN COALESCE(published_at, NOW()) ELSE published_at END
              WHERE id=?"
         );
         $stmt->bind_param(
-            'ssssisssssssssi',
+            'ssssissssssssssi',
             $slug, $title, $excerpt, $category, $coverId, $coverAlt, $highlightsJson, $blocksJson,
-            $search, $status, $author, $publishedAt, $publishedAt, $status, $id
+            $search, $status, $author, $titleFont, $publishedAt, $publishedAt, $status, $id
         );
         $stmt->execute();
         $stmt->close();
     } else {
         $stmt = $db->prepare(
-            "INSERT INTO posts (slug, title, excerpt, category, cover_media_id, cover_alt, highlights, blocks, search_text, status, author, published_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CASE WHEN ? IS NOT NULL THEN ? WHEN ? = 'published' THEN NOW() ELSE NULL END)"
+            "INSERT INTO posts (slug, title, excerpt, category, cover_media_id, cover_alt, highlights, blocks, search_text, status, author, title_font, published_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CASE WHEN ? IS NOT NULL THEN ? WHEN ? = 'published' THEN NOW() ELSE NULL END)"
         );
         $stmt->bind_param(
-            'ssssisssssssss',
+            'ssssissssssssss',
             $slug, $title, $excerpt, $category, $coverId, $coverAlt, $highlightsJson, $blocksJson,
-            $search, $status, $author, $publishedAt, $publishedAt, $status
+            $search, $status, $author, $titleFont, $publishedAt, $publishedAt, $status
         );
         $stmt->execute();
         $id = (int)$db->insert_id;
