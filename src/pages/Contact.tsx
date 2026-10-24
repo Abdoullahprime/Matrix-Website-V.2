@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Mail, Phone, MapPin, Send, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
 import usePageMeta from '../hooks/usePageMeta';
@@ -11,6 +12,7 @@ const INTEREST_OPTIONS = [
   'Enterprise Operations (ERP)',
   'IT Infrastructure & Security',
   'Compliance & Reporting',
+  'Partnership (Matrix Partner Network)',
 ];
 
 const emptyForm = {
@@ -27,7 +29,12 @@ type FormState = typeof emptyForm;
 export default function Contact() {
   usePageMeta(getPageMeta('/contact'));
 
-  const [form, setForm] = useState<FormState>(emptyForm);
+  // /contact?interest=partnership opens the form with the partnership option already chosen.
+  const [params] = useSearchParams();
+  const [form, setForm] = useState<FormState>(() => ({
+    ...emptyForm,
+    interest: params.get('interest') === 'partnership' ? INTEREST_OPTIONS[INTEREST_OPTIONS.length - 1] : emptyForm.interest,
+  }));
   // When the form appeared. Sent with the message so the server can tell a person from a bot
   // that posts instantly without ever opening the form.
   const openedAt = useRef(Date.now());

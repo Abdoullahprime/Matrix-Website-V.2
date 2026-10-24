@@ -9,6 +9,7 @@ import solutionPages from '../data/solutionPages.json';
 const navItems = [
   { name: 'Solutions', to: '/solutions' },
   { name: 'Clients', to: '/clients' },
+  { name: 'Partnership', to: '/partnership' },
   { name: 'About', to: '/about' },
   { name: 'Resources', to: '/resources' },
   { name: 'Blog', to: '/blog' },
@@ -149,6 +150,7 @@ export default function Layout() {
               <ul className="space-y-4 text-sm text-slate-400 font-medium">
                 <li><Link to="/about" className="hover:text-white transition-colors">About Matrix</Link></li>
                 <li><Link to="/clients" className="hover:text-white transition-colors">Our Clients</Link></li>
+                <li><Link to="/partnership" className="hover:text-white transition-colors">Partnership</Link></li>
                 <li><Link to="/resources" className="hover:text-white transition-colors">Resources</Link></li>
                 <li><Link to="/blog" className="hover:text-white transition-colors">Blog</Link></li>
                 <li><Link to="/contact" className="hover:text-white transition-colors">Contact Sales</Link></li>

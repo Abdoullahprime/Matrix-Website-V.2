@@ -12,6 +12,7 @@ import Clients from './pages/Clients';
 import About from './pages/About';
 import Resources from './pages/Resources';
 import Contact from './pages/Contact';
+import Partnership from './pages/Partnership';
 import NotFound from './pages/NotFound';
 import BlogIndex from './pages/BlogIndex';
 import BlogPost from './pages/BlogPost';
@@ -63,6 +64,7 @@ export default function App() {
                 <Route path="solutions" element={<Solutions />} />
                 <Route path="solutions/:slug" element={<SolutionDetail />} />
                 <Route path="clients" element={<Clients />} />
+                <Route path="partnership" element={<Partnership />} />
                 <Route path="about" element={<About />} />
                 <Route path="resources" element={<Resources />} />
                 <Route path="blog" element={<BlogIndex />} />
