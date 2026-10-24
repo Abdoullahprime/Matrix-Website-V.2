@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowDown, ArrowUp, Heading2, Image as ImageIcon, List, Loader2, Quote, Trash2, Type, Video, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, Columns, Heading2, Image as ImageIcon, List, Loader2, MousePointerClick, Plus, Quote, Trash2, Type, Video, X } from 'lucide-react';
 import BlogBlocks from '../../components/BlogBlocks';
-import { Block, ImageSize } from '../../lib/blog';
+import { Align, Block, ButtonItem, ImageSize, TitleFont } from '../../lib/blog';
 import { adminApi, EditablePost, prepareImage } from './adminApi';
 import { productCategories, productSlug } from '../../data/products';
 
@@ -28,9 +28,13 @@ const blank = (): EditablePost => ({
 const newBlock = (type: Block['type']): Block => {
   switch (type) {
     case 'heading':
-      return { type, text: '', level: 2 };
+      return { type, text: '', level: 2, font: 'sans', align: 'left', highlight: '' };
     case 'paragraph':
-      return { type, text: '' };
+      return { type, text: '', align: 'left' };
+    case 'buttons':
+      return { type, items: [{ label: 'Request a Demo', url: '/contact', style: 'primary' }], align: 'center' };
+    case 'split':
+      return { type, side: 'left', heading: '', text: '', mediaId: 0, alt: '', font: 'sans', buttons: [] };
     case 'image':
       return { type, mediaId: 0, size: 'normal', alt: '', caption: '' };
     case 'list':
@@ -41,6 +45,53 @@ const newBlock = (type: Block['type']): Block => {
       return { type, url: '', caption: '' };
   }
 };
+
+const AlignSelect = ({ value, onChange }: { value: Align; onChange: (v: Align) => void }) => (
+  <select className={field} value={value} onChange={(e) => onChange(e.target.value as Align)} aria-label="Alignment">
+    <option value="left">Align left</option>
+    <option value="center">Align center</option>
+    <option value="right">Align right</option>
+  </select>
+);
+
+const FontSelect = ({ value, onChange }: { value: TitleFont; onChange: (v: TitleFont) => void }) => (
+  <select className={field} value={value} onChange={(e) => onChange(e.target.value as TitleFont)} aria-label="Font">
+    <option value="sans">Font: Modern</option>
+    <option value="serif">Font: Elegant serif</option>
+    <option value="handwritten">Font: Handwritten</option>
+  </select>
+);
+
+/** One or two buttons: label, link (/contact or https://...) and style. */
+function ButtonsEditor({ items, onChange }: { items: ButtonItem[]; onChange: (items: ButtonItem[]) => void }) {
+  const set = (i: number, patch: Partial<ButtonItem>) => onChange(items.map((b, j) => (j === i ? { ...b, ...patch } : b)));
+  return (
+    <div className="space-y-3">
+      {items.map((b, i) => (
+        <div key={i} className="grid md:grid-cols-[1fr_1fr_9rem_auto] gap-3 items-center">
+          <input className={field} value={b.label} maxLength={40} onChange={(e) => set(i, { label: e.target.value })} placeholder="Button text, e.g. Book a demo" />
+          <input className={field} value={b.url} maxLength={500} onChange={(e) => set(i, { url: e.target.value })} placeholder="/contact or https://..." />
+          <select className={field} value={b.style} onChange={(e) => set(i, { style: e.target.value === 'secondary' ? 'secondary' : 'primary' })}>
+            <option value="primary">Solid</option>
+            <option value="secondary">Outline</option>
+          </select>
+          <button type="button" onClick={() => onChange(items.filter((_, j) => j !== i))} className="p-2 rounded hover:bg-red-50 text-red-600" title="Remove button">
+            <Trash2 size={16} />
+          </button>
+        </div>
+      ))}
+      {items.length < 2 && (
+        <button
+          type="button"
+          onClick={() => onChange([...items, { label: items.length === 0 ? 'Request a Demo' : 'Start now', url: '/contact', style: items.length === 0 ? 'primary' : 'secondary' }])}
+          className="flex items-center gap-2 text-sm font-bold text-matrix-blue-primary hover:underline"
+        >
+          <Plus size={16} /> {items.length === 0 ? 'Add a button' : 'Add a second button (shown side by side)'}
+        </button>
+      )}
+    </div>
+  );
+}
 
 /** Pick a picture, shrink it, store it, and report the stored id and address. */
 function ImagePicker({ onPicked }: { onPicked: (id: number, url: string) => void }) {
@@ -96,7 +147,11 @@ export default function PostEditor({ postId, kind = 'post' }: { postId: number |
       .then((r) => {
         // The server keeps only the video id; rebuild a link so the field is filled and re-saves.
         const blocks = r.post.blocks.map((b) =>
-          b.type === 'video' && b.youtubeId && !b.url ? { ...b, url: `https://youtu.be/${b.youtubeId}` } : b
+          b.type === 'video' && b.youtubeId && !b.url
+            ? { ...b, url: `https://youtu.be/${b.youtubeId}` }
+            : b.type === 'split' && b.youtubeId && !b.video
+              ? { ...b, video: `https://youtu.be/${b.youtubeId}` }
+              : b
         );
         setPost({ ...r.post, blocks });
         setSlugTouched(true);
@@ -144,6 +199,8 @@ export default function PostEditor({ postId, kind = 'post' }: { postId: number |
     { type: 'list', text: 'List', icon: <List size={16} /> },
     { type: 'quote', text: 'Quote', icon: <Quote size={16} /> },
     { type: 'video', text: 'YouTube video', icon: <Video size={16} /> },
+    { type: 'split', text: 'Text beside picture', icon: <Columns size={16} /> },
+    { type: 'buttons', text: 'Buttons', icon: <MousePointerClick size={16} /> },
   ];
 
   return (
@@ -349,15 +406,54 @@ export default function PostEditor({ postId, kind = 'post' }: { postId: number |
                 </div>
 
                 {b.type === 'paragraph' && (
-                  <textarea className={`${field} resize-y`} rows={5} maxLength={6000} value={b.text} onChange={(e) => setBlock(i, { text: e.target.value })} placeholder="Write the paragraph…" />
+                  <div className="space-y-3">
+                    <textarea className={`${field} resize-y`} rows={5} maxLength={6000} value={b.text} onChange={(e) => setBlock(i, { text: e.target.value })} placeholder="Write the paragraph..." />
+                    <div className="max-w-xs">
+                      <AlignSelect value={b.align ?? 'left'} onChange={(v) => setBlock(i, { align: v })} />
+                    </div>
+                  </div>
                 )}
                 {b.type === 'heading' && (
-                  <div className="flex gap-3">
-                    <input className={field} value={b.text} maxLength={200} onChange={(e) => setBlock(i, { text: e.target.value })} placeholder="Heading" />
-                    <select className={`${field} !w-40`} value={b.level} onChange={(e) => setBlock(i, { level: Number(e.target.value) === 3 ? 3 : 2 })}>
-                      <option value={2}>Large</option>
-                      <option value={3}>Smaller</option>
-                    </select>
+                  <div className="space-y-3">
+                    <input className={`${field} text-lg`} value={b.text} maxLength={200} onChange={(e) => setBlock(i, { text: e.target.value })} placeholder="Title" />
+                    <div className="grid md:grid-cols-3 gap-3">
+                      <select className={field} value={b.level} onChange={(e) => setBlock(i, { level: Number(e.target.value) as 1 | 2 | 3 })} aria-label="Size">
+                        <option value={1}>Size: Extra large</option>
+                        <option value={2}>Size: Large</option>
+                        <option value={3}>Size: Smaller</option>
+                      </select>
+                      <FontSelect value={b.font ?? 'sans'} onChange={(v) => setBlock(i, { font: v })} />
+                      <AlignSelect value={b.align ?? 'left'} onChange={(v) => setBlock(i, { align: v })} />
+                    </div>
+                    <input className={field} value={b.highlight ?? ''} maxLength={100} onChange={(e) => setBlock(i, { highlight: e.target.value })} placeholder="Highlight a word or phrase from the title (optional)" />
+                  </div>
+                )}
+                {b.type === 'buttons' && (
+                  <div className="space-y-3">
+                    <ButtonsEditor items={b.items} onChange={(items) => setBlock(i, { items })} />
+                    <div className="max-w-xs">
+                      <AlignSelect value={b.align ?? 'center'} onChange={(v) => setBlock(i, { align: v })} />
+                    </div>
+                  </div>
+                )}
+                {b.type === 'split' && (
+                  <div className="space-y-4">
+                    <div className="grid md:grid-cols-2 gap-3">
+                      <select className={field} value={b.side} onChange={(e) => setBlock(i, { side: e.target.value === 'right' ? 'right' : 'left' })} aria-label="Picture side">
+                        <option value="left">Picture on the left, text on the right</option>
+                        <option value="right">Picture on the right, text on the left</option>
+                      </select>
+                      <FontSelect value={b.font ?? 'sans'} onChange={(v) => setBlock(i, { font: v })} />
+                    </div>
+                    <input className={field} value={b.heading} maxLength={200} onChange={(e) => setBlock(i, { heading: e.target.value })} placeholder="Title (optional)" />
+                    <textarea className={`${field} resize-y`} rows={4} maxLength={4000} value={b.text} onChange={(e) => setBlock(i, { text: e.target.value })} placeholder="Text next to the picture" />
+                    <div className="space-y-3 rounded-xl border border-slate-100 p-4">
+                      {b.url && !b.video ? <img src={b.url} alt="" className="max-h-40 rounded-lg border border-slate-100" /> : null}
+                      <ImagePicker onPicked={(id, url) => setBlock(i, { mediaId: id, url, video: '' } as Partial<Block>)} />
+                      <input className={field} value={b.video ?? ''} onChange={(e) => setBlock(i, { video: e.target.value } as Partial<Block>)} placeholder="Or paste a YouTube link to show a video instead" />
+                      <input className={field} value={b.alt} maxLength={300} onChange={(e) => setBlock(i, { alt: e.target.value })} placeholder="Describe the picture" />
+                    </div>
+                    <ButtonsEditor items={b.buttons ?? []} onChange={(buttons) => setBlock(i, { buttons })} />
                   </div>
                 )}
                 {b.type === 'image' && (

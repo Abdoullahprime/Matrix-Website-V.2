@@ -5,6 +5,7 @@ import { CheckCircle2, Loader2 } from 'lucide-react';
 import usePageMeta from '../hooks/usePageMeta';
 import Breadcrumbs from '../components/Breadcrumbs';
 import BlogBlocks from '../components/BlogBlocks';
+import OtherApps from '../components/OtherApps';
 import NotFound from './NotFound';
 import { Block, seoTitle } from '../lib/blog';
 
@@ -95,7 +96,7 @@ export default function ProductSolutionPage({ slug }: { slug: string }) {
       )}
 
       <section className="section-padding">
-        <div className="container-custom max-w-4xl space-y-12">
+        <div className="container-custom max-w-6xl space-y-16">
           {page.highlights.length > 0 && (
             <div>
               <h2 className="text-2xl md:text-3xl font-extrabold text-matrix-navy mb-6">Key features</h2>
@@ -109,9 +110,11 @@ export default function ProductSolutionPage({ slug }: { slug: string }) {
               </ul>
             </div>
           )}
-          <BlogBlocks blocks={page.blocks} />
+          <BlogBlocks blocks={page.blocks} spacious />
         </div>
       </section>
+
+      <OtherApps currentSlug={page.slug} currentProduct={page.product} />
 
       <section className="section-padding bg-matrix-navy text-white text-center">
         <div className="container-custom max-w-3xl mx-auto space-y-8">

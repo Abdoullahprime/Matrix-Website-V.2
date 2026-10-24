@@ -311,8 +311,18 @@ function mx_clean_blocks(mysqli $db, mixed $blocks): array
                 if ($text === '') {
                     continue 2;
                 }
-                $level = ((int)($b['level'] ?? 2)) === 3 ? 3 : 2;
-                $clean[] = ['type' => 'heading', 'text' => $text, 'level' => $level];
+                $level = (int)($b['level'] ?? 2);
+                $level = in_array($level, [1, 2, 3], true) ? $level : 2;
+                $hl = mx_text($b['highlight'] ?? '', 100);
+                if ($hl !== '' && (function_exists('mb_stripos') ? mb_stripos($text, $hl) : stripos($text, $hl)) === false) {
+                    $hl = ''; // the highlighted words must appear in the title
+                }
+                $clean[] = [
+                    'type' => 'heading', 'text' => $text, 'level' => $level,
+                    'font' => mx_choice($b['font'] ?? '', ['sans', 'serif', 'handwritten'], 'sans'),
+                    'align' => mx_choice($b['align'] ?? '', ['left', 'center', 'right'], 'left'),
+                    'highlight' => $hl,
+                ];
                 $search[] = $text;
                 break;
             case 'paragraph':
@@ -320,7 +330,7 @@ function mx_clean_blocks(mysqli $db, mixed $blocks): array
                 if ($text === '') {
                     continue 2;
                 }
-                $clean[] = ['type' => 'paragraph', 'text' => $text];
+                $clean[] = ['type' => 'paragraph', 'text' => $text, 'align' => mx_choice($b['align'] ?? '', ['left', 'center', 'right'], 'left')];
                 $search[] = $text;
                 break;
             case 'image':
@@ -366,11 +376,85 @@ function mx_clean_blocks(mysqli $db, mixed $blocks): array
                 $clean[] = ['type' => 'video', 'youtubeId' => $vid, 'caption' => $caption];
                 $search[] = $caption;
                 break;
+            case 'buttons':
+                $items = mx_clean_buttons($b['items'] ?? [], $n);
+                if (count($items) === 0) {
+                    continue 2;
+                }
+                $clean[] = ['type' => 'buttons', 'items' => $items, 'align' => mx_choice($b['align'] ?? '', ['left', 'center', 'right'], 'center')];
+                $search[] = implode(' ', array_column($items, 'label'));
+                break;
+            case 'split':
+                // Text beside a picture or a YouTube video, either way round.
+                $heading = mx_text($b['heading'] ?? '', 200);
+                $text = mx_text($b['text'] ?? '', 4000);
+                $video = null;
+                if (trim((string)($b['video'] ?? '')) !== '') {
+                    $video = mx_youtube_id((string)$b['video']);
+                    if ($video === null) {
+                        mx_json(400, ['error' => "Block $n: paste a YouTube link, or clear the video box."]);
+                    }
+                }
+                $mid = (int)($b['mediaId'] ?? 0);
+                if ($video === null) {
+                    if ($mid <= 0 || !mx_media_exists($db, $mid)) {
+                        mx_json(400, ['error' => "Block $n: choose a picture (or paste a YouTube link)."]);
+                    }
+                }
+                if ($heading === '' && $text === '') {
+                    mx_json(400, ['error' => "Block $n: add some text next to the picture."]);
+                }
+                $alt = mx_text($b['alt'] ?? '', 300);
+                $clean[] = [
+                    'type' => 'split', 'side' => ($b['side'] ?? '') === 'right' ? 'right' : 'left',
+                    'heading' => $heading, 'text' => $text, 'mediaId' => $video === null ? $mid : 0,
+                    'youtubeId' => $video ?? '', 'alt' => $alt,
+                    'font' => mx_choice($b['font'] ?? '', ['sans', 'serif', 'handwritten'], 'sans'),
+                    'buttons' => mx_clean_buttons($b['buttons'] ?? [], $n),
+                ];
+                $search[] = $heading . ' ' . $text . ' ' . $alt;
+                break;
             default:
                 mx_json(400, ['error' => "Block $n has an unknown type."]);
         }
     }
     return [$clean, trim(preg_replace('/\s+/', ' ', implode(' ', $search)) ?? '')];
+}
+
+/** $v if it is one of $allowed, else $default. */
+function mx_choice(mixed $v, array $allowed, string $default): string
+{
+    return is_string($v) && in_array($v, $allowed, true) ? $v : $default;
+}
+
+/**
+ * Up to two buttons. A link may be a path on this site ("/contact") or a full https address.
+ * Anything else (javascript:, data:, //other-site) is refused.
+ */
+function mx_clean_buttons(mixed $items, int $blockNo): array
+{
+    $out = [];
+    foreach (array_slice(is_array($items) ? array_values($items) : [], 0, 2) as $it) {
+        if (!is_array($it)) {
+            continue;
+        }
+        $label = mx_text($it['label'] ?? '', 40);
+        $url = trim((string)($it['url'] ?? ''));
+        if ($label === '' && $url === '') {
+            continue;
+        }
+        $ok = preg_match('/^\/(?!\/)[A-Za-z0-9._~%\/?#&=:@+,;-]*$/', $url) === 1
+            || (preg_match('~^https://[^\s<>"]+$~i', $url) === 1 && filter_var($url, FILTER_VALIDATE_URL) !== false);
+        if ($label === '' || !$ok || strlen($url) > 500) {
+            mx_json(400, ['error' => "Block $blockNo: each button needs a label and a link that starts with / or https://"]);
+        }
+        $out[] = [
+            'label' => $label,
+            'url' => $url,
+            'style' => ($it['style'] ?? '') === 'secondary' ? 'secondary' : 'primary',
+        ];
+    }
+    return $out;
 }
 
 function mx_media_url(?int $id): ?string
@@ -382,7 +466,7 @@ function mx_media_url(?int $id): ?string
 function mx_decorate_blocks(array $blocks): array
 {
     foreach ($blocks as &$b) {
-        if (($b['type'] ?? '') === 'image') {
+        if (($b['type'] ?? '') === 'image' || (($b['type'] ?? '') === 'split' && (int)($b['mediaId'] ?? 0) > 0)) {
             $b['url'] = mx_media_url((int)$b['mediaId']);
         }
     }

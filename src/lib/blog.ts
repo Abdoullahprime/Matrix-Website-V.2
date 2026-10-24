@@ -2,13 +2,36 @@
 
 export type ImageSize = 'small' | 'normal' | 'wide';
 
+export type Align = 'left' | 'center' | 'right';
+export type TitleFont = 'sans' | 'serif' | 'handwritten';
+
+export interface ButtonItem {
+  label: string;
+  url: string;
+  style: 'primary' | 'secondary';
+}
+
 export type Block =
-  | { type: 'heading'; text: string; level: 2 | 3 }
-  | { type: 'paragraph'; text: string }
+  | { type: 'heading'; text: string; level: 1 | 2 | 3; font?: TitleFont; align?: Align; highlight?: string }
+  | { type: 'paragraph'; text: string; align?: Align }
   | { type: 'image'; mediaId: number; url?: string; size: ImageSize; alt: string; caption: string }
   | { type: 'list'; ordered: boolean; items: string[] }
   | { type: 'quote'; text: string; cite: string }
-  | { type: 'video'; youtubeId?: string; url?: string; caption: string };
+  | { type: 'video'; youtubeId?: string; url?: string; caption: string }
+  | { type: 'buttons'; items: ButtonItem[]; align?: Align }
+  | {
+      type: 'split';
+      side: 'left' | 'right';
+      heading: string;
+      text: string;
+      mediaId: number;
+      url?: string;
+      youtubeId?: string;
+      video?: string;
+      alt: string;
+      font?: TitleFont;
+      buttons: ButtonItem[];
+    };
 
 export interface PostSummary {
   slug: string;
@@ -53,6 +76,7 @@ export function readingMinutes(blocks: Block[]): number {
   const words = blocks
     .map((b) => {
       if (b.type === 'paragraph' || b.type === 'heading' || b.type === 'quote') return b.text;
+      if (b.type === 'split') return `${b.heading} ${b.text}`;
       if (b.type === 'list') return b.items.join(' ');
       return '';
     })
