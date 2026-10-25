@@ -104,6 +104,10 @@ function mx_cms_schema(mysqli $db): void
             $db->query("ALTER TABLE $t ADD COLUMN title_font VARCHAR(12) NOT NULL DEFAULT 'sans'");
         }
     }
+    // Other products that should open the same page (for example Payroll opening the integrated HR page).
+    if ($db->query("SHOW COLUMNS FROM solution_pages LIKE 'also_products'")->num_rows === 0) {
+        $db->query("ALTER TABLE solution_pages ADD COLUMN also_products TEXT NULL");
+    }
     $done = true;
 }
 
@@ -493,6 +497,13 @@ function mx_decorate_blocks(array $blocks): array
 }
 
 /** Highlights are stored as JSON; always return a clean list of strings. */
+/** Product names a page also opens from, as a clean list of strings. */
+function mx_decode_also(?string $raw): array
+{
+    $d = $raw !== null && $raw !== '' ? json_decode($raw, true) : [];
+    return is_array($d) ? array_values(array_filter($d, 'is_string')) : [];
+}
+
 function mx_decode_highlights(string $raw): array
 {
     $d = json_decode($raw, true);

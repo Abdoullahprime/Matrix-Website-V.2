@@ -17,7 +17,12 @@ try {
 
     $slug = (string)($_GET['slug'] ?? '');
     if ($slug === '') {
-        $rows = $db->query("SELECT slug, product, title FROM solution_pages WHERE status = 'published' ORDER BY title")->fetch_all(MYSQLI_ASSOC);
+        $rows = $db->query("SELECT slug, product, title, also_products FROM solution_pages WHERE status = 'published' ORDER BY title")->fetch_all(MYSQLI_ASSOC);
+        foreach ($rows as &$row) {
+            $row['also'] = mx_decode_also($row['also_products']);
+            unset($row['also_products']);
+        }
+        unset($row);
         header('Cache-Control: public, max-age=60');
         mx_json(200, ['pages' => $rows]);
     }

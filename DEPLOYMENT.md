@@ -194,6 +194,8 @@ fixed solution page that already covers it (HR & Payroll, Accounting, Banking, I
 with neither keeps the quick "Request a Demo" card. Stored in the `solution_pages` table; each page
 gets its own HTML head through `api/solution.php`, the same way blog posts do.
 
+**Several products, one page:** in the solution page editor, "Also open this page from other products" lets one page serve several product icons (for example the integrated HR & Payroll page opening from both Human Resources and Payroll).
+
 **Page builder blocks (posts and solution pages):** title (size, font: modern, serif or handwritten,
 alignment, one highlighted phrase), paragraph (left, center or right), buttons (one, or two side by
 side; links are `/path` or `https://` only), text beside a picture or YouTube video (either side),

@@ -39,6 +39,7 @@ try {
             'product' => $p['product'],
             'title' => $p['title'],
             'titleFont' => $p['title_font'],
+            'alsoProducts' => mx_decode_also($p['also_products']),
             'excerpt' => $p['excerpt'],
             'coverMediaId' => $cid,
             'coverUrl' => mx_media_url($cid),
@@ -79,6 +80,14 @@ try {
         mx_json(400, ['error' => 'Give the page a title.']);
     }
     $excerpt = mx_text($body['excerpt'] ?? '', 400);
+    $also = [];
+    foreach ((is_array($body['alsoProducts'] ?? null) ? $body['alsoProducts'] : []) as $name) {
+        $n = mx_text($name, 200);
+        if ($n !== '' && $n !== $product) {
+            $also[$n] = $n;
+        }
+    }
+    $alsoJson = json_encode(array_slice(array_values($also), 0, 20), JSON_UNESCAPED_UNICODE);
     $titleFont = mx_choice($body['titleFont'] ?? '', ['sans', 'serif', 'handwritten'], 'sans');
     $coverAlt = mx_text($body['coverAlt'] ?? '', 300);
     $status = ($body['status'] ?? '') === 'published' ? 'published' : 'draft';
@@ -110,16 +119,16 @@ try {
 
     if ($id > 0) {
         $stmt = $db->prepare(
-            'UPDATE solution_pages SET slug=?, product=?, title=?, excerpt=?, cover_media_id=?, cover_alt=?, highlights=?, blocks=?, search_text=?, status=?, title_font=? WHERE id=?'
+            'UPDATE solution_pages SET slug=?, product=?, title=?, excerpt=?, cover_media_id=?, cover_alt=?, highlights=?, blocks=?, search_text=?, status=?, title_font=?, also_products=? WHERE id=?'
         );
-        $stmt->bind_param('ssssissssssi', $slug, $product, $title, $excerpt, $coverId, $coverAlt, $highlightsJson, $blocksJson, $search, $status, $titleFont, $id);
+        $stmt->bind_param('ssssisssssssi', $slug, $product, $title, $excerpt, $coverId, $coverAlt, $highlightsJson, $blocksJson, $search, $status, $titleFont, $alsoJson, $id);
         $stmt->execute();
         $stmt->close();
     } else {
         $stmt = $db->prepare(
-            'INSERT INTO solution_pages (slug, product, title, excerpt, cover_media_id, cover_alt, highlights, blocks, search_text, status, title_font) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+            'INSERT INTO solution_pages (slug, product, title, excerpt, cover_media_id, cover_alt, highlights, blocks, search_text, status, title_font, also_products) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         );
-        $stmt->bind_param('ssssissssss', $slug, $product, $title, $excerpt, $coverId, $coverAlt, $highlightsJson, $blocksJson, $search, $status, $titleFont);
+        $stmt->bind_param('ssssisssssss', $slug, $product, $title, $excerpt, $coverId, $coverAlt, $highlightsJson, $blocksJson, $search, $status, $titleFont, $alsoJson);
         $stmt->execute();
         $id = (int)$db->insert_id;
         $stmt->close();

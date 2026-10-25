@@ -24,14 +24,21 @@ function shuffle<T>(items: T[]): T[] {
  * Only products that really have a page to open are offered, and no two cards go to the same page.
  */
 export default function OtherApps({ currentSlug, currentProduct, count = 3 }: { currentSlug: string; currentProduct?: string; count?: number }) {
-  const [ownPages, setOwnPages] = useState<Set<string> | null>(null);
+  const [ownPages, setOwnPages] = useState<Map<string, string> | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     fetch('/api/solutions.php')
       .then((r) => (r.ok ? r.json() : null))
-      .then((d) => !cancelled && setOwnPages(new Set(d ? (d.pages as { slug: string }[]).map((p) => p.slug) : [])))
-      .catch(() => !cancelled && setOwnPages(new Set()));
+      .then((d) => {
+        if (cancelled) return;
+        const map = new Map<string, string>();
+        for (const p of (d ? d.pages : []) as { slug: string; product: string; also?: string[] }[]) {
+          for (const name of [p.product, ...(p.also ?? [])]) if (name) map.set(productSlug(name), p.slug);
+        }
+        setOwnPages(map);
+      })
+      .catch(() => !cancelled && setOwnPages(new Map()));
     return () => {
       cancelled = true;
     };
@@ -44,8 +51,7 @@ export default function OtherApps({ currentSlug, currentProduct, count = 3 }: { 
     const all = productCategories.flatMap((c) => c.items);
     for (const item of shuffle(all)) {
       if (item.name === currentProduct) continue;
-      const own = productSlug(item.name);
-      const dest = ownPages.has(own) ? own : fixedSolutionSlug(item.name);
+      const dest = ownPages.get(productSlug(item.name)) ?? fixedSolutionSlug(item.name);
       if (!dest || seen.has(dest)) continue;
       seen.add(dest);
       out.push({ name: item.name, desc: item.desc, icon: item.icon as Card['icon'], to: `/solutions/${dest}` });

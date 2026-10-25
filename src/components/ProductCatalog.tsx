@@ -8,19 +8,27 @@ export default function ProductCatalog() {
   const navigate = useNavigate();
   const [selectedProduct, setSelectedProduct] = useState<{name: string, desc: string} | null>(null);
   // Products that have their own page written in the admin area (a failed load just means none).
-  const [ownPages, setOwnPages] = useState<Set<string>>(new Set());
+  const [ownPages, setOwnPages] = useState<Map<string, string>>(new Map());
   useEffect(() => {
     fetch('/api/solutions.php')
       .then((r) => (r.ok ? r.json() : null))
-      .then((d) => d && setOwnPages(new Set((d.pages as { slug: string }[]).map((p) => p.slug))))
+      .then((d) => {
+        if (!d) return;
+        // product (by its address-style name) -> the page that opens for it
+        const map = new Map<string, string>();
+        for (const p of d.pages as { slug: string; product: string; also?: string[] }[]) {
+          for (const name of [p.product, ...(p.also ?? [])]) if (name) map.set(productSlug(name), p.slug);
+        }
+        setOwnPages(map);
+      })
       .catch(() => undefined);
   }, []);
 
   // A product opens its own page if it has one, else the fixed solution page that covers it,
   // else the quick "Request a Demo" card.
   const openProduct = (item: { name: string; desc: string }) => {
-    const own = productSlug(item.name);
-    if (ownPages.has(own)) return navigate(`/solutions/${own}`);
+    const own = ownPages.get(productSlug(item.name));
+    if (own) return navigate(`/solutions/${own}`);
     const fixed = fixedSolutionSlug(item.name);
     if (fixed) return navigate(`/solutions/${fixed}`);
     setSelectedProduct(item);

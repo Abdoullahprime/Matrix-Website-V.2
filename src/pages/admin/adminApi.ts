@@ -24,6 +24,8 @@ export interface EditablePost {
   id?: number;
   /** Solution pages only: the product on the Solutions page this page belongs to. */
   product?: string;
+  /** Solution pages only: other products whose icon should also open this page. */
+  alsoProducts?: string[];
   slug: string;
   title: string;
   /** Font of the page's main title. */

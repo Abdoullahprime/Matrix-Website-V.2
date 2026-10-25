@@ -301,6 +301,31 @@ export default function PostEditor({ postId, kind = 'post' }: { postId: number |
                   ))}
                 </select>
                 <p className="mt-2 text-xs text-slate-500 font-medium">Once published, clicking this product on the Solutions page opens this page. The web address is made from the product name.</p>
+                <details className="mt-4 rounded-xl border border-slate-200 bg-white">
+                  <summary className="cursor-pointer px-4 py-3 text-sm font-bold text-matrix-navy">
+                    Also open this page from other products{(post.alsoProducts ?? []).length > 0 ? ` (${(post.alsoProducts ?? []).length} chosen)` : ''}
+                  </summary>
+                  <div className="px-4 pb-4 grid sm:grid-cols-2 gap-x-6 gap-y-2 max-h-72 overflow-y-auto">
+                    {productCategories.flatMap((c) => c.items).filter((i) => i.name !== post.product).map((i) => (
+                      <label key={i.name} className="flex items-start gap-2 text-sm font-medium text-slate-700">
+                        <input
+                          type="checkbox"
+                          className="mt-1"
+                          checked={(post.alsoProducts ?? []).includes(i.name)}
+                          onChange={(e) =>
+                            setPost((p) => ({
+                              ...p,
+                              alsoProducts: e.target.checked
+                                ? [...(p.alsoProducts ?? []), i.name]
+                                : (p.alsoProducts ?? []).filter((n) => n !== i.name),
+                            }))
+                          }
+                        />
+                        {i.name}
+                      </label>
+                    ))}
+                  </div>
+                </details>
               </div>
             )}
             {!isSolution && (
