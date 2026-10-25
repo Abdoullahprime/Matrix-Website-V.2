@@ -197,7 +197,7 @@ gets its own HTML head through `api/solution.php`, the same way blog posts do.
 **Page builder blocks (posts and solution pages):** title (size, font: modern, serif or handwritten,
 alignment, one highlighted phrase), paragraph (left, center or right), buttons (one, or two side by
 side; links are `/path` or `https://` only), text beside a picture or YouTube video (either side),
-image, list, quote and video. Product pages end with a random "One need, one app" grid of other
+image, list, quote and video. Product pages end with a random "A standalone or one suite" grid of three other
 products that have a page to open. The handwritten font is only downloaded on pages that use it.
 
 `/sitemap.xml` is generated live by `api/sitemap.php` (fixed pages plus published posts).

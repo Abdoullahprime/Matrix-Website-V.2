@@ -20,10 +20,10 @@ function shuffle<T>(items: T[]): T[] {
 }
 
 /**
- * "More from Matrix": a random handful of OTHER products at the bottom of a product page.
+ * "A standalone or one suite": a random three of OTHER products at the bottom of a product page.
  * Only products that really have a page to open are offered, and no two cards go to the same page.
  */
-export default function OtherApps({ currentSlug, currentProduct, count = 6 }: { currentSlug: string; currentProduct?: string; count?: number }) {
+export default function OtherApps({ currentSlug, currentProduct, count = 3 }: { currentSlug: string; currentProduct?: string; count?: number }) {
   const [ownPages, setOwnPages] = useState<Set<string> | null>(null);
 
   useEffect(() => {
@@ -60,8 +60,8 @@ export default function OtherApps({ currentSlug, currentProduct, count = 6 }: { 
     <section className="section-padding bg-slate-50/70 border-t border-slate-100">
       <div className="container-custom">
         <div className="text-center max-w-2xl mx-auto mb-12 space-y-3">
-          <h2 className="text-3xl md:text-5xl font-extrabold text-matrix-navy leading-tight">One need, one app.</h2>
-          <p className="text-lg text-slate-600 font-medium">Explore more of what Matrix Solutions builds and supports.</p>
+          <h2 className="text-3xl md:text-5xl font-extrabold text-matrix-navy leading-tight">A standalone or one suite.</h2>
+          <p className="text-lg text-slate-600 font-medium">Use any Matrix solution on its own, or combine several as one suite. Here are a few more to explore.</p>
         </div>
         <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {cards.map((c) => (
